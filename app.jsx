@@ -14,13 +14,17 @@ import {
   IceCream,
   RefreshCw,
   Layers,
-  Shield
+  Shield,
+  Coffee,
+  Dumbbell,
+  Pill
 } from 'lucide-react';
 
 const App = () => {
   const [servings, setServings] = useState(3);
   const [activeTab, setActiveTab] = useState('mon'); 
   const [activePlan, setActivePlan] = useState(1); // Plan 1, 2 oder 3
+  const [bulkingMode, setBulkingMode] = useState(false);
 
   const profileName = "Chiggas and White's";
   
@@ -61,6 +65,17 @@ const App = () => {
   const activeDays = planData[activePlan];
   const currentDay = activeDays.find(d => d.id === activeTab) || activeDays[0];
 
+  // Bulking Frühstück-Optionen (~550 kcal)
+  const bulkingBreakfasts = {
+    mon: { name: 'Power-Oats', desc: 'Haferflocken mit Banane, Honig & Whey Protein.' },
+    tue: { name: 'Avocado Toast', desc: 'Vollkornbrot mit Avocado, 3 Eiern & Tomaten.' },
+    wed: { name: 'Protein Pancakes', desc: 'Pancakes aus Haferflocken, Eiern & Whey mit Beeren.' },
+    thu: { name: 'Müsli Bowl', desc: 'Griechischer Joghurt, Haferflocken, Nüsse & Beeren.' },
+    fri: { name: 'Rührei Deluxe', desc: '4 Eier mit Vollkornbrot, Käse & Spinat.' },
+    sat: { name: 'Shake & Oats', desc: 'Overnight Oats mit Whey, Erdnussmus & Banane.' },
+    sun: { name: 'Big Breakfast', desc: 'Vollkornbrot, Eier, Avocado & Hüttenkäse.' }
+  };
+
   // Einkaufslisten (Thunfisch integriert)
   const shoppingWeekly = [
     { item: 'Rinderstreifen / Hack', qty: 1.2, unit: 'kg', price: '22.00', store: 'Denner' },
@@ -85,11 +100,12 @@ const App = () => {
 
   // Helper für Zutaten (Simuliert gleiche Basis für alle Pläne)
   const getIngredients = (day) => {
+    const m = bulkingMode ? 1.4 : 1;
     const base = [
-      { item: 'Protein (Rind/Huhn/Fisch)', qty: 200, unit: 'g' },
-      { item: 'Carbs (Reis/Süsskartoffel)', qty: 250, unit: 'g' },
-      { item: 'Gemüse (Brokkoli/Spinat)', qty: 300, unit: 'g' },
-      { item: 'Linsen (Trocken)', qty: 60, unit: 'g' }
+      { item: 'Protein (Rind/Huhn/Fisch)', qty: Math.round(200 * m), unit: 'g' },
+      { item: 'Carbs (Reis/Süsskartoffel)', qty: Math.round(250 * m), unit: 'g' },
+      { item: 'Gemüse (Brokkoli/Spinat)', qty: Math.round(300 * m), unit: 'g' },
+      { item: 'Linsen (Trocken)', qty: Math.round(60 * m), unit: 'g' }
     ];
     if (day.type === 'fish') base[0].item = fishOptions;
     if (day.type === 'poultry') base[0].item = 'Pouletbrust';
@@ -145,6 +161,33 @@ const App = () => {
       .sort((a, b) => b.percent - a.percent);
   };
 
+  // Bulking Dinner Enhancement
+  const getBulkDinner = (day) => {
+    const extras = {
+      meat: ' Dazu: Extra Reis & Avocado.',
+      fish: ' Dazu: Süsskartoffel & Olivenöl.',
+      poultry: ' Dazu: Vollkornbrot & Erdnussmus.',
+      veggie: ' Dazu: Reis & Hüttenkäse.'
+    };
+    return day.dinner.replace(/\.$/, '') + (extras[day.type] || '') ;
+  };
+
+  // Supplement-Empfehlungen basierend auf Vitaminwerten
+  const getSupplementRecs = (vitamins) => {
+    const vMap = {};
+    vitamins.forEach(vi => vMap[vi.name] = vi.percent);
+    const recs = [];
+    if ((vMap['D3']||0) < 80) recs.push({ name: 'Vitamin D3', dose: '2000–4000 IU / Tag', reason: 'Knochen, Immunsystem & Hormonhaushalt', priority: 'high' });
+    if ((vMap['Omega-3']||0) < 80) recs.push({ name: 'Omega-3 (Fischöl)', dose: '1000–2000mg EPA/DHA', reason: 'Entzündungshemmend & Herzgesundheit', priority: 'high' });
+    if ((vMap['Magnesium']||0) < 60) recs.push({ name: 'Magnesium', dose: '200–400mg / Tag', reason: 'Muskelregeneration & Schlafqualität', priority: 'medium' });
+    if ((vMap['Zink']||0) < 60) recs.push({ name: 'Zink', dose: '15–30mg / Tag', reason: 'Immunsystem & Testosteron', priority: 'medium' });
+    if ((vMap['Vitamin C']||0) < 80) recs.push({ name: 'Vitamin C', dose: '500–1000mg / Tag', reason: 'Immunsystem & Antioxidans', priority: 'low' });
+    if ((vMap['Eisen']||0) < 50) recs.push({ name: 'Eisen', dose: '14mg / Tag', reason: 'Sauerstofftransport & Energie', priority: 'medium' });
+    if ((vMap['Calcium']||0) < 60) recs.push({ name: 'Calcium', dose: '500–1000mg / Tag', reason: 'Knochen & Muskelfunktion', priority: 'low' });
+    if ((vMap['Vitamin E']||0) < 50) recs.push({ name: 'Vitamin E', dose: '15mg / Tag', reason: 'Zellschutz & Antioxidans', priority: 'low' });
+    return recs;
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20 md:pb-12">
       {/* Header Section */}
@@ -165,11 +208,24 @@ const App = () => {
                 <span className="text-xs font-bold uppercase tracking-wider">Personen</span>
               </div>
               <div className="flex items-center gap-4">
-                <button onClick={() => setServings(Math.max(1, servings - 1))} className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg font-bold">-</button>
-                <span className="text-xl font-black text-emerald-400 w-6 text-center">{servings}</span>
-                <button onClick={() => setServings(Math.min(10, servings + 1))} className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg font-bold">+</button>
+                <button onClick={() => setServings(Math.max(0.5, servings - 0.5))} className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg font-bold">-</button>
+                <span className="text-xl font-black text-emerald-400 w-8 text-center">{servings}</span>
+                <button onClick={() => setServings(Math.min(10, servings + 0.5))} className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-lg font-bold">+</button>
               </div>
             </div>
+            {/* Bulking Modus Toggle */}
+            <button 
+              onClick={() => setBulkingMode(!bulkingMode)}
+              className={`p-3 rounded-2xl flex items-center gap-3 justify-between transition-all ${bulkingMode ? 'bg-orange-500/20 border border-orange-400/40' : 'bg-white/10 border border-white/20'}`}
+            >
+              <div className="flex items-center gap-2">
+                <Dumbbell size={18} className={bulkingMode ? 'text-orange-400' : 'text-slate-400'} />
+                <span className="text-xs font-bold uppercase tracking-wider">Bulking Modus</span>
+              </div>
+              <div className={`w-10 h-5 rounded-full relative transition-all ${bulkingMode ? 'bg-orange-500' : 'bg-white/20'}`}>
+                <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${bulkingMode ? 'left-[22px]' : 'left-[2px]'}`}></div>
+              </div>
+            </button>
           </div>
         </div>
         <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
@@ -271,10 +327,29 @@ const App = () => {
             {/* Meal Header */}
             <div className="flex items-center justify-between px-1">
               <h2 className="text-2xl font-black text-slate-800">{currentDay.fullName} <span className="text-emerald-500">Plan {activePlan}</span></h2>
-              <div className="flex items-center gap-1.5 text-slate-500 font-bold bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-100 text-xs">
-                <Flame size={14} className="text-orange-500" />
-                <span>~2350 kcal</span>
+              <div className={`flex items-center gap-1.5 font-bold px-3 py-1.5 rounded-full shadow-sm border text-xs ${bulkingMode ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-white border-slate-100 text-slate-500'}`}>
+                <Flame size={14} className={bulkingMode ? 'text-orange-500' : 'text-orange-500'} />
+                <span>~{bulkingMode ? '3000' : '2350'} kcal</span>
               </div>
+            </div>
+
+            {/* Frühstück */}
+            <div className={`rounded-2xl p-4 flex items-center gap-4 ${bulkingMode ? 'bg-orange-50 border border-orange-200' : 'bg-slate-50 border border-slate-100'}`}>
+              <div className={`p-2.5 rounded-xl shrink-0 ${bulkingMode ? 'bg-orange-100 text-orange-600' : 'bg-slate-200 text-slate-400'}`}>
+                <Coffee size={18} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Frühstück {bulkingMode && '· Bulking'}</p>
+                {bulkingMode ? (
+                  <>
+                    <p className="font-black text-slate-900 text-sm">{bulkingBreakfasts[currentDay.id]?.name || 'Power-Oats'}</p>
+                    <p className="text-slate-500 text-xs">{bulkingBreakfasts[currentDay.id]?.desc}</p>
+                  </>
+                ) : (
+                  <p className="font-bold text-slate-500 text-xs">Schwarzer Kaffee oder Tee <span className="text-slate-300">· 0 kcal · Intervallfasten</span></p>
+                )}
+              </div>
+              {bulkingMode && <span className="text-orange-500 font-mono font-black text-xs shrink-0">~550 kcal</span>}
             </div>
 
             {/* Grid */}
@@ -314,8 +389,8 @@ const App = () => {
                   </div>
                   <span className="font-bold text-white/50 uppercase text-[10px]">Abendessen</span>
                 </div>
-                <h3 className="text-xl font-black mb-3">{currentDay.isCheat ? 'Cheat Night' : 'Recovery Meal'}</h3>
-                <p className="text-white/80 italic text-base mb-8 leading-relaxed">"{currentDay.dinner}"</p>
+                <h3 className="text-xl font-black mb-3">{currentDay.isCheat ? 'Cheat Night' : (bulkingMode ? 'Heavy Recovery Meal' : 'Recovery Meal')}</h3>
+                <p className="text-white/80 italic text-base mb-8 leading-relaxed">"{bulkingMode ? getBulkDinner(currentDay) : currentDay.dinner}"</p>
                 <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
                   <span className="text-[10px] text-white/50 font-bold uppercase">Consistency is Key</span>
                   <CheckCircle2 className="text-emerald-400" size={20} />
@@ -381,6 +456,32 @@ const App = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Supplement-Empfehlungen */}
+              {(() => {
+                const recs = getSupplementRecs(getVitaminCoverage(currentDay));
+                return recs.length > 0 ? (
+                  <div className="mt-6 pt-6 border-t border-slate-100">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Pill size={16} className="text-blue-500" />
+                      <h3 className="font-black text-slate-800 text-sm">Empfohlene Supplements</h3>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase ml-auto">Basierend auf Tageswerten</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {recs.map((rec, idx) => (
+                        <div key={idx} className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-3">
+                          <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${rec.priority === 'high' ? 'bg-red-400' : rec.priority === 'medium' ? 'bg-amber-400' : 'bg-blue-400'}`}></div>
+                          <div>
+                            <p className="font-bold text-slate-800 text-sm">{rec.name}</p>
+                            <p className="text-blue-600 font-mono text-[11px] font-bold">{rec.dose}</p>
+                            <p className="text-slate-400 text-[10px]">{rec.reason}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
             </section>
           </div>
         )}
