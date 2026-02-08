@@ -131,9 +131,14 @@ const App = () => {
     if (text.includes('milch')) { v['Calcium'] = (v['Calcium']||0)+30; v['B2'] = (v['B2']||0)+20; }
     if (text.includes('joghurt')) { v['Calcium'] = (v['Calcium']||0)+25; v['B2'] = (v['B2']||0)+15; }
 
-    // Daily Post-Workout Shake (Whey + Kreatin)
-    v['B2'] = (v['B2']||0)+30;
-    v['Calcium'] = (v['Calcium']||0)+25;
+    // Daily Post-Workout Shake (30g Whey Protein)
+    v['Calcium'] = (v['Calcium']||0)+30;
+    v['B2'] = (v['B2']||0)+35;
+    v['B6'] = (v['B6']||0)+20;
+    v['B1'] = (v['B1']||0)+15;
+    v['B12'] = (v['B12']||0)+15;
+    v['Magnesium'] = (v['Magnesium']||0)+15;
+    v['Phosphor'] = (v['Phosphor']||0)+20;
 
     return Object.entries(v)
       .map(([name, percent]) => ({ name, percent: Math.min(percent, 150) }))
@@ -327,22 +332,22 @@ const App = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-black">Post-Workout Shake</h3>
-                    <p className="text-white/50 text-[10px] font-bold uppercase tracking-wider">Täglich nach dem Training</p>
+                    <p className="text-white/50 text-[10px] font-bold uppercase tracking-wider">Täglich nach dem Training · {servings} {servings === 1 ? 'Person' : 'Personen'}</p>
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl text-center">
                   <p className="text-white/50 text-[9px] font-bold uppercase mb-1">Whey Protein</p>
-                  <p className="font-black text-lg text-emerald-300">30g</p>
+                  <p className="font-black text-lg text-emerald-300">{30 * servings}g</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl text-center">
                   <p className="text-white/50 text-[9px] font-bold uppercase mb-1">Kreatin</p>
-                  <p className="font-black text-lg text-emerald-300">5-10g</p>
+                  <p className="font-black text-lg text-emerald-300">{5 * servings}-{10 * servings}g</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl text-center">
                   <p className="text-white/50 text-[9px] font-bold uppercase mb-1">Wasser</p>
-                  <p className="font-black text-lg text-emerald-300">300ml</p>
+                  <p className="font-black text-lg text-emerald-300">{300 * servings}ml</p>
                 </div>
               </div>
             </div>
