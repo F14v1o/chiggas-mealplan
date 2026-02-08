@@ -13,7 +13,8 @@ import {
   Coins, 
   IceCream,
   RefreshCw,
-  Layers
+  Layers,
+  Shield
 } from 'lucide-react';
 
 const App = () => {
@@ -94,6 +95,49 @@ const App = () => {
     if (day.type === 'poultry') base[0].item = 'Pouletbrust';
     if (day.type === 'meat') base[0].item = 'Rinderstreifen/Hack';
     return base;
+  };
+
+  // Dynamische Vitamin-Abdeckung basierend auf Tagesmahlzeiten
+  const getVitaminCoverage = (day) => {
+    const v = {};
+
+    // Protein-Quelle
+    if (day.type === 'meat') { v['B12'] = 130; v['Zink'] = 65; v['B6'] = 55; v['Eisen'] = 45; v['B3 (Niacin)'] = 60; }
+    else if (day.type === 'fish') { v['B12'] = 120; v['D3'] = 85; v['Selen'] = 90; v['Omega-3'] = 100; v['B6'] = 45; }
+    else if (day.type === 'poultry') { v['B6'] = 70; v['B3 (Niacin)'] = 85; v['Selen'] = 75; v['B12'] = 40; }
+    else if (day.type === 'veggie') { v['Eisen'] = 50; v['Folsäure'] = 80; v['B1'] = 55; v['Mangan'] = 70; }
+
+    const text = (day.lunchDesc + ' ' + day.dinner + ' ' + day.snack).toLowerCase();
+
+    // Gemüse & Beilagen
+    if (text.includes('brokkoli')) { v['Vitamin C'] = (v['Vitamin C']||0)+70; v['Vitamin K'] = (v['Vitamin K']||0)+85; v['Folsäure'] = (v['Folsäure']||0)+30; }
+    if (text.includes('spinat')) { v['Vitamin K'] = (v['Vitamin K']||0)+120; v['Vitamin A'] = (v['Vitamin A']||0)+55; v['Folsäure'] = (v['Folsäure']||0)+40; v['Magnesium'] = (v['Magnesium']||0)+35; }
+    if (text.includes('grünkohl')) { v['Vitamin K'] = (v['Vitamin K']||0)+130; v['Vitamin C'] = (v['Vitamin C']||0)+60; v['Vitamin A'] = (v['Vitamin A']||0)+50; }
+    if (text.includes('pak choi')) { v['Vitamin C'] = (v['Vitamin C']||0)+40; v['Vitamin K'] = (v['Vitamin K']||0)+45; v['Calcium'] = (v['Calcium']||0)+20; }
+    if (text.includes('süsskartoffel') || text.includes('süßkartoffel')) { v['Vitamin A'] = (v['Vitamin A']||0)+120; v['Vitamin C'] = (v['Vitamin C']||0)+25; v['B6'] = (v['B6']||0)+20; }
+    if (text.includes('linsen')) { v['Eisen'] = (v['Eisen']||0)+35; v['Folsäure'] = (v['Folsäure']||0)+45; v['B1'] = (v['B1']||0)+25; }
+    if (text.includes('tomaten')) { v['Vitamin C'] = (v['Vitamin C']||0)+20; v['Vitamin A'] = (v['Vitamin A']||0)+15; }
+
+    // Eier (Abendessen)
+    const hasEggs = text.includes('eier') || text.includes('omelett') || text.includes('rührei') || text.includes('spiegel');
+    if (hasEggs) { v['B12'] = (v['B12']||0)+25; v['D3'] = (v['D3']||0)+15; v['Selen'] = (v['Selen']||0)+30; v['Vitamin A'] = (v['Vitamin A']||0)+15; }
+
+    // Snack-Beiträge
+    if (text.includes('kiwi')) v['Vitamin C'] = (v['Vitamin C']||0)+130;
+    if (text.includes('beeren')) v['Vitamin C'] = (v['Vitamin C']||0)+35;
+    if (text.includes('nüss') || text.includes('nuss') || text.includes('cashews') || text.includes('mandeln')) { v['Vitamin E'] = (v['Vitamin E']||0)+35; v['Magnesium'] = (v['Magnesium']||0)+25; }
+    if (text.includes('banane')) { v['B6'] = (v['B6']||0)+25; v['Kalium'] = (v['Kalium']||0)+20; }
+    if (text.includes('schoggi')) { v['Magnesium'] = (v['Magnesium']||0)+20; v['Eisen'] = (v['Eisen']||0)+15; }
+    if (text.includes('milch')) { v['Calcium'] = (v['Calcium']||0)+30; v['B2'] = (v['B2']||0)+20; }
+    if (text.includes('joghurt')) { v['Calcium'] = (v['Calcium']||0)+25; v['B2'] = (v['B2']||0)+15; }
+
+    // Daily Post-Workout Shake (Whey + Kreatin)
+    v['B2'] = (v['B2']||0)+30;
+    v['Calcium'] = (v['Calcium']||0)+25;
+
+    return Object.entries(v)
+      .map(([name, percent]) => ({ name, percent: Math.min(percent, 150) }))
+      .sort((a, b) => b.percent - a.percent);
   };
 
   return (
@@ -273,6 +317,66 @@ const App = () => {
                 </div>
               </div>
             </div>
+
+            {/* Daily Post-Workout Shake */}
+            <div className="bg-gradient-to-r from-violet-600 to-purple-700 rounded-[2rem] p-5 md:p-6 shadow-xl text-white">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/10 p-2.5 rounded-xl border border-white/20">
+                    <Zap size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black">Post-Workout Shake</h3>
+                    <p className="text-white/50 text-[10px] font-bold uppercase tracking-wider">Täglich nach dem Training</p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl text-center">
+                  <p className="text-white/50 text-[9px] font-bold uppercase mb-1">Whey Protein</p>
+                  <p className="font-black text-lg text-emerald-300">30g</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl text-center">
+                  <p className="text-white/50 text-[9px] font-bold uppercase mb-1">Kreatin</p>
+                  <p className="font-black text-lg text-emerald-300">5-10g</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl text-center">
+                  <p className="text-white/50 text-[9px] font-bold uppercase mb-1">Wasser</p>
+                  <p className="font-black text-lg text-emerald-300">300ml</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Vitamin-Abdeckung */}
+            <section className="bg-white rounded-[2rem] p-5 md:p-8 shadow-sm border border-slate-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-emerald-100 p-3 rounded-xl text-emerald-600">
+                  <Shield size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-800">Vitamin-Abdeckung</h2>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{currentDay.fullName} — Plan {activePlan}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {getVitaminCoverage(currentDay).map((vitItem, idx) => (
+                  <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <span className="font-bold text-slate-700 text-sm">{vitItem.name}</span>
+                      <span className={`font-mono font-black text-sm ${vitItem.percent >= 80 ? 'text-emerald-600' : vitItem.percent >= 50 ? 'text-amber-500' : 'text-red-400'}`}>
+                        {vitItem.percent}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${vitItem.percent >= 80 ? 'bg-emerald-500' : vitItem.percent >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
+                        style={{ width: `${Math.min(vitItem.percent, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
         )}
 
@@ -291,7 +395,7 @@ const App = () => {
       </main>
 
       <footer className="text-center mt-8 text-slate-400 text-[10px] font-bold uppercase tracking-widest pb-10">
-        <p>Built for Linda Gioia // v3.0 Multi-Plan</p>
+        <p>Built for Jil // v3.0 Multi-Plan</p>
       </footer>
 
       <style dangerouslySetInnerHTML={{ __html: `.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}} />
