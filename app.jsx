@@ -35,17 +35,17 @@ const App = () => {
   const planData = {
     1: [ // ORIGINAL: Bowls & Recovery
       { id: 'mon', name: 'MO', fullName: 'Montag', lunch: 'The Big Bowl', lunchDesc: 'Wildreis, Rinderstreifen, Brokkoli, Linsen.', snack: '2 Kiwis & Walnüsse', dinner: 'Rührei mit viel Spinat.', type: 'meat' },
-      { id: 'tue', name: 'DI', fullName: 'Dienstag', lunch: 'Omega-3 Fokus', lunchDesc: 'Süßkartoffel, Lachsfilet, Grünkohl.', snack: 'Cashews & Beeren', dinner: 'Salat mit 3 Eiern & Linsen.', type: 'fish' },
+      { id: 'tue', name: 'DI', fullName: 'Dienstag', lunch: 'Omega-3 Fokus', lunchDesc: 'Süßkartoffel, Lachsfilet, Grünkohl.', snack: 'Cashews & Beeren', dinner: 'Salat mit 3 Eiern & Edamame.', type: 'fish' },
       { id: 'wed', name: 'MI', fullName: 'Mittwoch', lunch: 'Hähnchen-Mitte', lunchDesc: 'Brauner Reis, Pouletbrust, Pak Choi, Linsen.', snack: 'Calcium-Milch & Apfel', dinner: 'Omelett mit Pilzen & Vollkornbrot.', type: 'poultry' },
-      { id: 'thu', name: 'DO', fullName: 'Donnerstag', lunch: 'Rind & Power', lunchDesc: 'Süßkartoffel-Wedges, Rinderhack, Grünkohl.', snack: 'Vit D3+K2 & Banane', dinner: 'Spiegeleier auf Linsen/Spinat.', type: 'meat' },
+      { id: 'thu', name: 'DO', fullName: 'Donnerstag', lunch: 'Schwein & Power', lunchDesc: 'Süsskartoffel-Wedges, Schweinsnierstücke, Grünkohl.', snack: 'Vit D3+K2 & Banane', dinner: 'Spiegeleier auf Erbsen/Spinat.', type: 'pork' },
       { id: 'fri', name: 'FR', fullName: 'Freitag', lunch: 'Fish Friday', lunchDesc: 'Wildreis, Weissfisch, Brokkoli, Pak Choi.', snack: 'Dunkle Schoggi & Nüsse', dinner: 'Rührei mit Räucherlachs.', type: 'fish' },
       { id: 'sat', name: 'SA', fullName: 'Samstag', lunch: 'Big Workout Bowl', lunchDesc: 'Reis/Süßkartoffel Mix, doppelt Poulet, Grünkohl.', snack: 'Nüsse & Whey Shake', dinner: 'Gekochte Eier mit Rohkost.', type: 'poultry' },
       { id: 'sun', name: 'SO', fullName: 'Sonntag', lunch: 'Linsen-Bolo', lunchDesc: 'Süßkartoffel gefüllt mit Linsen-Bolo & Brokkoli.', snack: 'CHEAT SNACK', dinner: 'Resterwertung Omelett.', type: 'veggie', isCheat: true }
     ],
     2: [ // VARIANTE 2: Pfannengerichte & Salate
-      { id: 'mon', name: 'MO', fullName: 'Montag', lunch: 'Beef & Pak Choi Stir-fry', lunchDesc: 'Rinderstreifen scharf angebraten mit Pak Choi & Reis.', snack: 'Handvoll Mandeln', dinner: 'Thunfisch-Salat mit 3 Eiern & Spinat.', type: 'meat' },
-      { id: 'tue', name: 'DI', fullName: 'Dienstag', lunch: 'Süsskartoffel-Fisch-Pfanne', lunchDesc: 'Lachs & Weissfisch Würfel mit Süsskartoffeln & Brokkoli.', snack: 'Griechischer Joghurt', dinner: 'Linsensalat mit Feta & Gurke.', type: 'fish' },
-      { id: 'wed', name: 'MI', fullName: 'Mittwoch', lunch: 'Poulet-Linsen Curry', lunchDesc: 'Pouletbrust in Linsen-Kokos-Sauce (ohne Reis).', snack: 'Birne & Cashews', dinner: '3 Spiegeleier auf Vollkornbrot.', type: 'poultry' },
+      { id: 'mon', name: 'MO', fullName: 'Montag', lunch: 'Schweine-Pfanne Asia', lunchDesc: 'Schweinsnierstücke scharf angebraten mit Pak Choi & Reis.', snack: 'Handvoll Mandeln', dinner: 'Thunfisch-Salat mit 3 Eiern & Spinat.', type: 'pork' },
+      { id: 'tue', name: 'DI', fullName: 'Dienstag', lunch: 'Süsskartoffel-Fisch-Pfanne', lunchDesc: 'Lachs & Weissfisch Würfel mit Süsskartoffeln & Brokkoli.', snack: 'Griechischer Joghurt', dinner: 'Edamame-Salat mit Feta & Gurke.', type: 'fish' },
+      { id: 'wed', name: 'MI', fullName: 'Mittwoch', lunch: 'Poulet-Erbsen Curry', lunchDesc: 'Pouletbrust in Erbsen-Kokos-Sauce (ohne Reis).', snack: 'Birne & Cashews', dinner: '3 Spiegeleier auf Vollkornbrot.', type: 'poultry' },
       { id: 'thu', name: 'DO', fullName: 'Donnerstag', lunch: 'Protein-Power Reis', lunchDesc: 'Rinderhack mit Wildreis, Spinat und viel Knoblauch.', snack: 'Proteinriegel (Whey)', dinner: 'Thunfisch-Omelett mit Tomaten.', type: 'meat' },
       { id: 'fri', name: 'FR', fullName: 'Freitag', lunch: 'Zitronen-Fisch', lunchDesc: 'Weissfisch mit Wildreis und gedünstetem Pak Choi.', snack: 'Apfel & Erdnussmus', dinner: 'Grosser grüner Salat mit Eiern.', type: 'fish' },
       { id: 'sat', name: 'SA', fullName: 'Samstag', lunch: 'Poulet-Süsskartoffel Mash', lunchDesc: 'Gestampfte Süsskartoffel mit Poulet & Grünkohl.', snack: 'Whey & Beeren', dinner: 'Hüttenkäse mit Nüssen.', type: 'poultry' },
@@ -53,11 +53,11 @@ const App = () => {
     ],
     3: [ // VARIANTE 3: Ofen-Gerichte & Einfachheit
       { id: 'mon', name: 'MO', fullName: 'Montag', lunch: 'Ofen-Rind & Gemüse', lunchDesc: 'Rinderstreifen mit Brokkoli & Süsskartoffeln vom Blech.', snack: 'Dunkle Schoggi', dinner: '3 Eier mit Linsen-Topping.', type: 'meat' },
-      { id: 'tue', name: 'DI', fullName: 'Dienstag', lunch: 'Wildreis-Thunfisch Mix', lunchDesc: 'Reissalat mit Thunfisch, Linsen und frischem Pak Choi.', snack: 'Kiwis', dinner: 'Rührei mit Grünkohl.', type: 'fish' },
+      { id: 'tue', name: 'DI', fullName: 'Dienstag', lunch: 'Wildreis-Thunfisch Mix', lunchDesc: 'Reissalat mit Thunfisch, Edamame und frischem Pak Choi.', snack: 'Kiwis', dinner: 'Rührei mit Grünkohl.', type: 'fish' },
       { id: 'wed', name: 'MI', fullName: 'Mittwoch', lunch: 'Crispy Poulet', lunchDesc: 'Pouletbrust aus dem Ofen mit Reis und Brokkoli-Salat.', snack: 'Nussmix', dinner: 'Protein-Pancakes (Eier/Whey).', type: 'poultry' },
-      { id: 'thu', name: 'DO', fullName: 'Donnerstag', lunch: 'Hackfleisch-Eintopf', lunchDesc: 'Rinderhack mit Linsen, Tomaten und Grünkohl.', snack: 'Banane', dinner: 'Thunfisch-Steak mit Spinat.', type: 'meat' },
-      { id: 'fri', name: 'FR', fullName: 'Freitag', lunch: 'Fisch-Päckli', lunchDesc: 'Lachs in Folie mit Pak Choi & Reis gegart.', snack: 'Beerenmix', dinner: 'Eiersalat mit Linsen.', type: 'fish' },
-      { id: 'sat', name: 'SA', fullName: 'Samstag', lunch: 'Fitness-Platte', lunchDesc: 'Poulet, Reis, Linsen & Brokkoli separat (Meal Prep Style).', snack: 'Whey Shake', dinner: '3 gekochte Eier.', type: 'poultry' },
+      { id: 'thu', name: 'DO', fullName: 'Donnerstag', lunch: 'Schweine-Eintopf', lunchDesc: 'Schweinsnierstücke mit Linsen, Tomaten und Grünkohl.', snack: 'Banane', dinner: 'Thunfisch-Steak mit Spinat.', type: 'pork' },
+      { id: 'fri', name: 'FR', fullName: 'Freitag', lunch: 'Fisch-Päckli', lunchDesc: 'Lachs in Folie mit Pak Choi & Reis gegart.', snack: 'Beerenmix', dinner: 'Eiersalat mit Erbsen.', type: 'fish' },
+      { id: 'sat', name: 'SA', fullName: 'Samstag', lunch: 'Fitness-Platte', lunchDesc: 'Poulet, Reis, Edamame & Brokkoli separat (Meal Prep Style).', snack: 'Whey Shake', dinner: '3 gekochte Eier.', type: 'poultry' },
       { id: 'sun', name: 'SO', fullName: 'Sonntag', lunch: 'Süsskartoffel-Linsen Suppe', lunchDesc: 'Cremige Suppe mit Brokkoli-Röschen.', snack: 'CHEAT SNACK', dinner: 'Resten-Omelett.', type: 'veggie', isCheat: true }
     ]
   };
@@ -78,7 +78,8 @@ const App = () => {
 
   // Einkaufslisten (Thunfisch integriert)
   const shoppingWeekly = [
-    { item: 'Rinderstreifen / Hack', qty: 1.2, unit: 'kg', price: '22.00', store: 'Denner' },
+    { item: 'Rinderstreifen / Hack', qty: 0.8, unit: 'kg', price: '14.50', store: 'Denner' },
+    { item: 'Schweinsnierstücke', qty: 0.8, unit: 'kg', price: '12.00', store: 'Denner/Migros' },
     { item: 'Pouletbrust (Gross-Pack)', qty: 1.5, unit: 'kg', price: '18.50', store: 'Migros' },
     { item: 'Lachs / Weissfisch / Thunfisch', qty: 1.5, unit: 'kg', price: '24.00', store: 'Denner/Migros' },
     { item: 'Eier (Freiland, 30er)', qty: 2, unit: 'Pack', price: '14.50', store: 'Migros' },
@@ -90,7 +91,9 @@ const App = () => {
 
   const shoppingMonthly = [
     { item: 'Reis (M-Budget, 5kg)', qty: 2, unit: 'Sack', price: '11.80', store: 'Migros' },
-    { item: 'Linsen (Trocken, 1kg)', qty: 4, unit: 'Pack', price: '10.00', store: 'Migros' },
+    { item: 'Linsen (Trocken, 1kg)', qty: 2, unit: 'Pack', price: '5.00', store: 'Migros' },
+    { item: 'Edamame (TK, 500g)', qty: 3, unit: 'Pack', price: '9.00', store: 'Migros' },
+    { item: 'Erbsen (TK, 1kg)', qty: 2, unit: 'Pack', price: '5.00', store: 'Denner' },
     { item: 'Thunfisch Konserven (Vorrat)', qty: 10, unit: 'Dosen', price: '15.00', store: 'Denner' },
     { item: 'Whey Protein (2.5kg)', qty: 1, unit: 'Kübel', price: '75.00', store: 'Online' },
     { item: 'Kreatin (500g)', qty: 1, unit: 'Dose', price: '25.00', store: 'Online' },
@@ -110,6 +113,11 @@ const App = () => {
     if (day.type === 'fish') base[0].item = fishOptions;
     if (day.type === 'poultry') base[0].item = 'Pouletbrust';
     if (day.type === 'meat') base[0].item = 'Rinderstreifen/Hack';
+    if (day.type === 'pork') base[0].item = 'Schweinsnierstücke';
+    // Hülsenfrucht dynamisch erkennen
+    const mealText = (day.lunchDesc + ' ' + day.dinner).toLowerCase();
+    if (mealText.includes('edamame')) { base[3].item = 'Edamame (TK)'; base[3].qty = Math.round(80 * m); }
+    else if (mealText.includes('erbsen')) { base[3].item = 'Erbsen (TK)'; base[3].qty = Math.round(100 * m); }
     return base;
   };
 
@@ -119,6 +127,7 @@ const App = () => {
 
     // Protein-Quelle
     if (day.type === 'meat') { v['B12'] = 130; v['Zink'] = 65; v['B6'] = 55; v['Eisen'] = 45; v['B3 (Niacin)'] = 60; }
+    else if (day.type === 'pork') { v['B1'] = 120; v['B6'] = 65; v['B12'] = 55; v['Zink'] = 50; v['Selen'] = 70; v['B3 (Niacin)'] = 75; v['Phosphor'] = (v['Phosphor']||0)+45; }
     else if (day.type === 'fish') { v['B12'] = 120; v['D3'] = 85; v['Selen'] = 90; v['Omega-3'] = 100; v['B6'] = 45; }
     else if (day.type === 'poultry') { v['B6'] = 70; v['B3 (Niacin)'] = 85; v['Selen'] = 75; v['B12'] = 40; }
     else if (day.type === 'veggie') { v['Eisen'] = 50; v['Folsäure'] = 80; v['B1'] = 55; v['Mangan'] = 70; }
@@ -132,6 +141,8 @@ const App = () => {
     if (text.includes('pak choi')) { v['Vitamin C'] = (v['Vitamin C']||0)+40; v['Vitamin K'] = (v['Vitamin K']||0)+45; v['Calcium'] = (v['Calcium']||0)+20; }
     if (text.includes('süsskartoffel') || text.includes('süßkartoffel')) { v['Vitamin A'] = (v['Vitamin A']||0)+120; v['Vitamin C'] = (v['Vitamin C']||0)+25; v['B6'] = (v['B6']||0)+20; }
     if (text.includes('linsen')) { v['Eisen'] = (v['Eisen']||0)+35; v['Folsäure'] = (v['Folsäure']||0)+45; v['B1'] = (v['B1']||0)+25; }
+    if (text.includes('edamame')) { v['Vitamin K'] = (v['Vitamin K']||0)+40; v['Folsäure'] = (v['Folsäure']||0)+60; v['Eisen'] = (v['Eisen']||0)+25; v['Vitamin C'] = (v['Vitamin C']||0)+15; v['Mangan'] = (v['Mangan']||0)+35; }
+    if (text.includes('erbsen')) { v['Vitamin C'] = (v['Vitamin C']||0)+30; v['Vitamin K'] = (v['Vitamin K']||0)+30; v['B1'] = (v['B1']||0)+35; v['Folsäure'] = (v['Folsäure']||0)+35; v['Mangan'] = (v['Mangan']||0)+25; }
     if (text.includes('tomaten')) { v['Vitamin C'] = (v['Vitamin C']||0)+20; v['Vitamin A'] = (v['Vitamin A']||0)+15; }
 
     // Eier (Abendessen)
@@ -165,6 +176,7 @@ const App = () => {
   const getBulkDinner = (day) => {
     const extras = {
       meat: ' Dazu: Extra Reis & Avocado.',
+      pork: ' Dazu: Reis, Brokkoli & Erdnussmus.',
       fish: ' Dazu: Süsskartoffel & Olivenöl.',
       poultry: ' Dazu: Vollkornbrot & Erdnussmus.',
       veggie: ' Dazu: Reis & Hüttenkäse.'
@@ -494,7 +506,7 @@ const App = () => {
           <div>
             <h4 className="font-black text-slate-800 uppercase text-[10px] tracking-widest mb-1">Variation & Info</h4>
             <p className="text-[11px] text-slate-500 leading-relaxed">
-              Die Pläne 1-3 nutzen die exakt gleichen Proteine und Carbs. <span className="text-slate-900 font-bold">Tipp:</span> Wenn du Thunfisch kaufst, achte auf "im eigenen Saft" für weniger Fett. Du kannst Fleisch/Fisch jederzeit untereinander tauschen, solange die Menge gleich bleibt.
+              Die Pläne 1-3 nutzen die exakt gleichen Proteine und Carbs. Proteinquellen: Rind, Schwein, Poulet & Fisch. <span className="text-slate-900 font-bold">Tipp:</span> Schweinsnierstücke sind Top für B1 (Thiamin) und günstiger als Rind. Du kannst Fleisch/Fisch jederzeit untereinander tauschen, solange die Menge gleich bleibt.
             </p>
           </div>
         </section>
