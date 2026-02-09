@@ -17,7 +17,10 @@ import {
   Shield,
   Coffee,
   Dumbbell,
-  Pill
+  Pill,
+  Tag,
+  X,
+  Bell
 } from 'lucide-react';
 
 const App = () => {
@@ -25,6 +28,34 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('mon'); 
   const [activePlan, setActivePlan] = useState(1); // Plan 1, 2 oder 3
   const [bulkingMode, setBulkingMode] = useState(false);
+  const [deals, setDeals] = useState([]);
+  const [showDeals, setShowDeals] = useState(false);
+
+  // Deals von Migros/Denner laden
+  useEffect(() => {
+    const fetchDeals = async () => {
+      try {
+        const res = await fetch('./deals.json?' + Date.now());
+        if (res.ok) {
+          const data = await res.json();
+          const today = new Date();
+          // Nur aktuelle Deals zeigen (gültig heute oder in naher Zukunft)
+          const activeDeals = (data.deals || []).filter(d => {
+            const end = new Date(d.validUntil);
+            const start = new Date(d.validFrom);
+            return today >= start && today <= end;
+          });
+          if (activeDeals.length > 0) {
+            setDeals(activeDeals);
+            setShowDeals(true);
+          }
+        }
+      } catch (e) {
+        // Keine Deals verfügbar — kein Fehler anzeigen
+      }
+    };
+    fetchDeals();
+  }, []);
 
   const profileName = "Chiggas and White's";
   
@@ -65,15 +96,35 @@ const App = () => {
   const activeDays = planData[activePlan];
   const currentDay = activeDays.find(d => d.id === activeTab) || activeDays[0];
 
-  // Bulking Frühstück-Optionen (~550 kcal)
+  // Bulking Frühstück-Optionen pro Plan (~550 kcal)
   const bulkingBreakfasts = {
-    mon: { name: 'Power-Oats', desc: 'Haferflocken mit Banane, Honig & Whey Protein.' },
-    tue: { name: 'Avocado Toast', desc: 'Vollkornbrot mit Avocado, 3 Eiern & Tomaten.' },
-    wed: { name: 'Protein Pancakes', desc: 'Pancakes aus Haferflocken, Eiern & Whey mit Beeren.' },
-    thu: { name: 'Müsli Bowl', desc: 'Griechischer Joghurt, Haferflocken, Nüsse & Beeren.' },
-    fri: { name: 'Rührei Deluxe', desc: '4 Eier mit Vollkornbrot, Käse & Spinat.' },
-    sat: { name: 'Shake & Oats', desc: 'Overnight Oats mit Whey, Erdnussmus & Banane.' },
-    sun: { name: 'Big Breakfast', desc: 'Vollkornbrot, Eier, Avocado & Hüttenkäse.' }
+    1: {
+      mon: { name: 'Banana PB Bites', desc: 'Banana-Scheiben mit Erdnussbutter, Haferflocken-Crunch & Honig.' },
+      tue: { name: 'Mini Banana Muffins', desc: 'Haferflocken, Bananen, Eier, Milch, Zimt & Schoko-Chips. Prep: 12 Stück.' },
+      wed: { name: 'Blueberry Joghurt Bites', desc: 'Joghurt-Blaubeer Bites mit dunkler Schokolade überzogen.' },
+      thu: { name: 'Apfel Bites', desc: 'Geriebener Apfel, Haferflocken, Mandelmus, Zimt & Honig.' },
+      fri: { name: 'Knäckebrot & Frischkäse', desc: 'Knäckebrot mit Kräuterfrischkäse & Gurke.' },
+      sat: { name: 'Power-Oats', desc: 'Haferflocken mit Banane, Honig & Whey Protein.' },
+      sun: { name: 'Big Breakfast', desc: 'Vollkornbrot, Eier, Avocado & Hüttenkäse.' }
+    },
+    2: {
+      mon: { name: 'Avocado Toast', desc: 'Vollkornbrot mit Avocado, 3 Eiern & Tomaten.' },
+      tue: { name: 'Banana PB Bites', desc: 'Banana-Scheiben mit Erdnussbutter, Haferflocken-Crunch & Honig.' },
+      wed: { name: 'Protein Pancakes', desc: 'Pancakes aus Haferflocken, Eiern & Whey mit Beeren.' },
+      thu: { name: 'Müsli Bowl', desc: 'Griechischer Joghurt, Haferflocken, Nüsse & Beeren.' },
+      fri: { name: 'Rührei Deluxe', desc: '4 Eier mit Vollkornbrot, Käse & Spinat.' },
+      sat: { name: 'Blueberry Joghurt Bites', desc: 'Joghurt-Blaubeer Bites mit dunkler Schokolade überzogen.' },
+      sun: { name: 'Big Breakfast', desc: 'Vollkornbrot, Eier, Avocado & Hüttenkäse.' }
+    },
+    3: {
+      mon: { name: 'Apfel Bites', desc: 'Geriebener Apfel, Haferflocken, Mandelmus, Zimt & Honig.' },
+      tue: { name: 'Knäckebrot & Frischkäse', desc: 'Knäckebrot mit Kräuterfrischkäse & Gurke.' },
+      wed: { name: 'Mini Banana Muffins', desc: 'Haferflocken, Bananen, Eier, Milch, Zimt & Schoko-Chips.' },
+      thu: { name: 'Shake & Oats', desc: 'Overnight Oats mit Whey, Erdnussmus & Banane.' },
+      fri: { name: 'Banana PB Bites', desc: 'Banana-Scheiben mit Erdnussbutter, Haferflocken-Crunch & Honig.' },
+      sat: { name: 'Blueberry Joghurt Bites', desc: 'Joghurt-Blaubeer Bites mit dunkler Schokolade überzogen.' },
+      sun: { name: 'Big Breakfast', desc: 'Vollkornbrot, Eier, Avocado & Hüttenkäse.' }
+    }
   };
 
   // Einkaufslisten (Thunfisch integriert)
@@ -240,6 +291,17 @@ const App = () => {
             </button>
           </div>
         </div>
+        {/* Deals Bell */}
+        {deals.length > 0 && (
+          <button 
+            onClick={() => setShowDeals(true)}
+            className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 p-2 rounded-xl transition-colors z-10"
+            title="Aktuelle Aktionen"
+          >
+            <Bell size={18} className="text-white" />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[8px] text-white font-black flex items-center justify-center">{deals.length}</span>
+          </button>
+        )}
         <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
       </header>
 
@@ -354,8 +416,8 @@ const App = () => {
                 <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Frühstück {bulkingMode && '· Bulking'}</p>
                 {bulkingMode ? (
                   <>
-                    <p className="font-black text-slate-900 text-sm">{bulkingBreakfasts[currentDay.id]?.name || 'Power-Oats'}</p>
-                    <p className="text-slate-500 text-xs">{bulkingBreakfasts[currentDay.id]?.desc}</p>
+                    <p className="font-black text-slate-900 text-sm">{bulkingBreakfasts[activePlan]?.[currentDay.id]?.name || 'Power-Oats'}</p>
+                    <p className="text-slate-500 text-xs">{bulkingBreakfasts[activePlan]?.[currentDay.id]?.desc}</p>
                   </>
                 ) : (
                   <p className="font-bold text-slate-500 text-xs">Schwarzer Kaffee oder Tee <span className="text-slate-300">· 0 kcal · Intervallfasten</span></p>
@@ -516,7 +578,56 @@ const App = () => {
         <p>Built for Jil // v3.0 Multi-Plan</p>
       </footer>
 
-      <style dangerouslySetInnerHTML={{ __html: `.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}} />
+      {/* Deals Popup */}
+      {showDeals && deals.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-up">
+            <div className="bg-gradient-to-r from-red-500 to-orange-500 p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-xl">
+                  <Tag size={20} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-white font-black text-sm">Aktuelle Aktionen</p>
+                  <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">Migros & Denner · Zürich</p>
+                </div>
+              </div>
+              <button onClick={() => setShowDeals(false)} className="bg-white/20 hover:bg-white/30 p-1.5 rounded-xl transition-colors">
+                <X size={16} className="text-white" />
+              </button>
+            </div>
+            <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
+              {deals.map((deal, idx) => (
+                <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-center gap-3">
+                  <div className="bg-red-50 text-red-500 font-black text-xs rounded-lg p-2 shrink-0 text-center min-w-[52px]">
+                    <span className="text-lg leading-none block">-{deal.discount}%</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-800 text-sm truncate">{deal.product}</p>
+                    <p className="text-slate-400 text-[10px] font-bold uppercase">{deal.store} · bis {new Date(deal.validUntil).toLocaleDateString('de-CH')}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-red-500 font-black text-sm">CHF {deal.price}</p>
+                    {deal.oldPrice && <p className="text-slate-300 text-[10px] line-through">CHF {deal.oldPrice}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-3 border-t border-slate-100 text-center">
+              <button onClick={() => setShowDeals(false)} className="text-slate-400 text-xs font-bold hover:text-slate-600 transition-colors">
+                Schliessen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes slide-up { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
+      `}} />
     </div>
   );
 };

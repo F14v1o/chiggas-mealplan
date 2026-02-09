@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+  schedule:
+    # Täglich um 06:00 UTC (07:00 Schweizer Zeit) Deals scrapen & deployen
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Manueller Trigger
 
 permissions:
   contents: read
@@ -31,6 +35,10 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Scrape Deals (Migros & Denner)
+        run: node scripts/scrape-deals.mjs
+        continue-on-error: true
 
       - name: Build
         run: npm run build
