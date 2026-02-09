@@ -1,54 +1,100 @@
 #!/usr/bin/env node
 /**
- * Deal-Scraper für Migros & Denner Aktionen
+ * Deal-Scraper für Denner & Migros Aktionen
  * Läuft als GitHub Action (cron) und generiert public/deals.json
- * 
+ *
  * Strategien:
- * 1. Migros: Fetch HTML → parse __NEXT_DATA__ oder JSON-LD
- * 2. Denner: Fetch HTML → parse strukturierte Daten
- * 3. Fallback: Leere deals.json
+ * 1. Denner: Fetch HTML → parse __NUXT_DATA__ → finde Produkt-URLs (~pXXXXX)
+ *    - Scrape 3 Seiten: aktuelle Woche, ab Donnerstag, Homepage
+ * 2. Migros: playwright-core + System-Chrome → Seite laden → API-Response abfangen
+ *    - Kein Browser-Download nötig — nutzt den Chrome der auf dem System/CI installiert ist
+ * 3. Fallback: Leere deals.json (Build bricht nie)
  */
 
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT = join(__dirname, '..', 'public', 'deals.json');
 
-// Mealplan-relevante Keywords für Filterung
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+// ─── Mealplan-relevante Keywords ─────────────────────────────────
 const KEYWORDS = [
   'hackfleisch', 'rindfleisch', 'schweinefleisch', 'poulet', 'hähnchen', 'chicken',
   'lachs', 'thunfisch', 'fisch', 'crevetten', 'garnelen',
   'reis', 'haferflocken', 'linsen', 'edamame', 'erbsen',
   'eier', 'milch', 'joghurt', 'quark', 'hüttenkäse', 'mozzarella', 'käse',
-  'avocado', 'brokkoli', 'spinat', 'kartoffel', 'süsskartoffel',
+  'avocado', 'brokkoli', 'broccoli', 'spinat', 'kartoffel', 'süsskartoffel',
   'banane', 'blaubeeren', 'apfel', 'beeren',
-  'erdnussbutter', 'nussmus', 'mandelmus', 'nüsse', 'mandeln', 'walnüsse',
+  'erdnussbutter', 'erdnussmus', 'nussmus', 'mandelmus', 'nüsse', 'mandeln', 'walnüsse',
   'olivenöl', 'kokosöl', 'butter',
   'whey', 'protein', 'kreatin',
   'vollkornbrot', 'knäckebrot', 'tortilla', 'pasta', 'spaghetti',
   'tomaten', 'passata', 'kokosmilch', 'sojasauce',
-  'tiefkühl', 'tk-gemüse', 'gefrier'
+  'tiefkühl', 'tk-gemüse', 'gefrier',
+  'hamburger', 'schinken', 'bacon', 'wurst', 'cervelat',
+  'schnitzel', 'geschnetzeltes', 'filet', 'steak', 'braten',
+  'entrecote', 'nierstück', 'crevett', 'shrimp', 'pouletbrust',
+  'mehl', 'brot', 'rind', 'schwein', 'fleisch',
+  'meatball', 'rindsburger', 'kabeljau', 'pangasius', 'rahm',
+  'wienerli', 'rippli', 'lammfilet', 'schweinsfilet', 'bratwurst',
+  'voressen', 'mortadella',
 ];
 
-function isRelevant(productName) {
-  const lower = productName.toLowerCase();
+function isRelevant(name) {
+  if (!name) return false;
+  const lower = name.toLowerCase();
   return KEYWORDS.some(kw => lower.includes(kw));
 }
 
-async function fetchWithTimeout(url, timeout = 15000) {
+function detectCategory(name) {
+  const n = name.toLowerCase();
+  if (/hack|rind|schwein|poulet|hähnchen|chicken|steak|filet|wurst|schinken|schnitzel|nierstück|braten|burger|entrecote|lamm|ripp|wiener|geschnetzelt|meatball|bratwurst|voressen|mortadella|cordon/i.test(n)) return 'Fleisch';
+  if (/lachs|thunfisch|fisch|crevetten|garnelen|shrimp|kabeljau|pangasius|muschel/i.test(n)) return 'Fisch';
+  if (/milch|joghurt|quark|käse|mozzarella|butter|rahm|hüttenkäse|gruyère|emmentaler|tilsiter|babybel|feta|frischkäse|cantadou/i.test(n)) return 'Milchprodukte';
+  if (/eier|ei\b/i.test(n)) return 'Eier';
+  if (/reis|hafer|pasta|brot|knäcke|tortilla|mehl|zucker/i.test(n)) return 'Getreide';
+  if (/avocado|brokk|broccoli|spinat|kartoffel|tomaten|gemüse|erbsen|edamame|linsen|mais|chicoree|salat/i.test(n)) return 'Gemüse';
+  if (/banane|apfel|beeren|blau|mango|orange|grapefruit/i.test(n)) return 'Früchte';
+  if (/erdnuss|nuss|mandel|öl|kokos/i.test(n)) return 'Fette & Nüsse';
+  if (/protein|whey|kreatin/i.test(n)) return 'Supplements';
+  return 'Sonstiges';
+}
+
+function getWeekStart() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(now.getFullYear(), now.getMonth(), diff).toISOString().split('T')[0];
+}
+
+function getWeekEnd() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? 0 : 7);
+  return new Date(now.getFullYear(), now.getMonth(), diff).toISOString().split('T')[0];
+}
+
+/** Parse Denner "statt X.XX" / "statt X.–" Preis-String */
+function parseStattPrice(str) {
+  if (!str) return null;
+  const cleaned = str
+    .replace('statt ', '')
+    .replace('–', '00')
+    .replace(',', '.')
+    .replace(/[^\d.]/g, '');
+  const val = parseFloat(cleaned);
+  return isNaN(val) ? null : val.toFixed(2);
+}
+
+async function fetchWithTimeout(url, options = {}, timeout = 20000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
   try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'de-CH,de;q=0.9,en;q=0.8',
-      }
-    });
+    const res = await fetch(url, { ...options, signal: controller.signal });
     clearTimeout(id);
     return res;
   } catch (e) {
@@ -57,302 +103,498 @@ async function fetchWithTimeout(url, timeout = 15000) {
   }
 }
 
-// ─── Strategie 1: Migros Angebote ───────────────────────────────
-async function scrapeMigros() {
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DENNER — via __NUXT_DATA__ Produkt-URL-Parsing
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function scrapeDennerPage(url) {
+  const res = await fetchWithTimeout(url, {
+    headers: { 'User-Agent': UA, 'Accept': 'text/html,application/xhtml+xml' }
+  });
+
+  if (!res.ok) throw new Error(`Status ${res.status}`);
+
+  const html = await res.text();
+  const match = html.match(/<script type="application\/json" id="__NUXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+  if (!match) throw new Error('Kein __NUXT_DATA__');
+
+  const nuxtData = JSON.parse(match[1]);
+  if (!Array.isArray(nuxtData)) throw new Error('__NUXT_DATA__ ist kein Array');
+
   const deals = [];
-  console.log('🔍 [Migros] Scraping Angebote...');
 
-  try {
-    // Versuch 1: Migros Angebote-Seite
-    const urls = [
-      'https://www.migros.ch/de/angebote',
-      'https://www.migros.ch/de/angebote.html'
-    ];
+  for (let i = 0; i < nuxtData.length; i++) {
+    const val = nuxtData[i];
+    if (typeof val !== 'string') continue;
 
-    for (const url of urls) {
-      try {
-        const res = await fetchWithTimeout(url);
-        if (!res.ok) continue;
-        const html = await res.text();
+    // Finde Produkt-URLs: /de/aktionen-und-sortiment/PRODUCT~pXXXXXX
+    const urlMatch = val.match(/\/de\/aktionen-und-sortiment\/([^~]+)~p(\d+)/);
+    if (!urlMatch) continue;
 
-        // Strategie A: __NEXT_DATA__ JSON parsen
-        const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-        if (nextDataMatch) {
-          try {
-            const nextData = JSON.parse(nextDataMatch[1]);
-            const offers = extractMigrosOffersFromNextData(nextData);
-            deals.push(...offers);
-            if (offers.length > 0) {
-              console.log(`  ✅ [Migros] ${offers.length} Deals via __NEXT_DATA__`);
-              break;
-            }
-          } catch (e) {
-            console.log(`  ⚠ [Migros] __NEXT_DATA__ parse error: ${e.message}`);
-          }
-        }
+    const productSlug = urlMatch[1];
+    const productUrl = `https://www.denner.ch${val.split('?')[0]}`;
 
-        // Strategie B: JSON-LD Schema parsen
-        const jsonLdMatches = html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g);
-        for (const match of jsonLdMatches) {
-          try {
-            const ld = JSON.parse(match[1]);
-            const offers = extractFromJsonLd(ld, 'Migros');
-            deals.push(...offers);
-          } catch (e) { /* ignore */ }
-        }
+    // Suche Produktname, Preise und Labels in der Umgebung
+    let productName = null;
+    let newPriceStr = null;
+    let oldPriceStr = null;
+    let discountLabel = null;
 
-        // Strategie C: Embedded JSON in script tags
-        const scriptMatches = html.matchAll(/<script[^>]*>[\s\S]*?(\{[\s\S]*?"offers?"[\s\S]*?\})[\s\S]*?<\/script>/gi);
-        for (const match of scriptMatches) {
-          try {
-            const data = JSON.parse(match[1]);
-            if (data.offers || data.products) {
-              const items = data.offers || data.products || [];
-              for (const item of items) {
-                if (item.name && isRelevant(item.name)) {
-                  deals.push(formatDeal(item, 'Migros'));
-                }
-              }
-            }
-          } catch (e) { /* ignore */ }
-        }
-
-        if (deals.length > 0) break;
-      } catch (e) {
-        console.log(`  ⚠ [Migros] Fetch error for ${url}: ${e.message}`);
+    // Rückwärts: Suche "statt X.XX" (alter Preis)
+    for (let j = Math.max(0, i - 15); j < i; j++) {
+      const v = nuxtData[j];
+      if (typeof v === 'string' && v.startsWith('statt ')) {
+        oldPriceStr = v;
       }
     }
-  } catch (e) {
-    console.log(`  ❌ [Migros] General error: ${e.message}`);
+
+    // Vorwärts: Suche Produktname und aktuellen Preis
+    for (let j = i + 1; j < Math.min(nuxtData.length, i + 30); j++) {
+      const v = nuxtData[j];
+      if (typeof v !== 'string') continue;
+
+      // Produktname: Lesbar, startet mit Grossbuchstabe, keine URL/Technik-Strings
+      if (!productName && v.length > 3 && v.length < 100
+          && !v.startsWith('/') && !v.startsWith('http')
+          && !v.includes('attribute') && !v.includes('{')
+          && !v.includes('banner') && !v.includes('automatic')
+          && v[0] === v[0].toUpperCase()
+          && !/^[A-Z_]+$/.test(v)) {
+        productName = v;
+      }
+    }
+
+    // Preise in der Nähe suchen
+    for (let j = Math.max(0, i - 8); j < Math.min(nuxtData.length, i + 40); j++) {
+      const v = nuxtData[j];
+      if (typeof v === 'string' && /^\d{1,3}\.\d{2}$/.test(v)) {
+        const p = parseFloat(v);
+        if (p > 0 && p < 500) {
+          if (!newPriceStr) {
+            newPriceStr = v;
+          }
+        }
+      }
+    }
+
+    // Rabatt-Labels suchen (z.B. "20%", "½ PREIS")
+    for (let j = Math.max(0, i - 20); j < Math.min(nuxtData.length, i + 20); j++) {
+      const v = nuxtData[j];
+      if (typeof v === 'string') {
+        const pctMatch = v.match(/(\d+)\s*%/);
+        if (pctMatch) discountLabel = parseInt(pctMatch[1]);
+        if (v.includes('½ PREIS') || v.includes('HALBPREIS')) discountLabel = 50;
+      }
+    }
+
+    if (!productName) continue;
+    // Filtere Banner/Werbung
+    if (productName.toLowerCase().includes('banner') || productName.toLowerCase().includes('tela')) continue;
+
+    const oldPrice = parseStattPrice(oldPriceStr);
+    const price = newPriceStr || null;
+    let discount = discountLabel || 0;
+
+    // Berechne Rabatt aus Preisen falls nicht explizit
+    if (!discount && oldPrice && price) {
+      discount = Math.round((1 - parseFloat(price) / parseFloat(oldPrice)) * 100);
+    }
+    if (discount < 0) discount = Math.abs(discount);
+    if (discount > 80) discount = 0; // Unrealistisch
+
+    // Nur Deals mit Preis aufnehmen
+    if (!price) continue;
+
+    deals.push({
+      product: productName,
+      store: 'Denner',
+      price,
+      oldPrice: oldPrice || null,
+      discount,
+      validFrom: getWeekStart(),
+      validUntil: getWeekEnd(),
+      category: detectCategory(productName),
+      url: productUrl,
+    });
   }
 
-  console.log(`  📦 [Migros] Total: ${deals.length} relevante Deals`);
   return deals;
 }
 
-function extractMigrosOffersFromNextData(data) {
-  const deals = [];
-  // Rekursiv durch das NextData-Objekt suchen
-  const search = (obj, depth = 0) => {
-    if (depth > 10 || !obj || typeof obj !== 'object') return;
-    
-    // Prüfe ob dieses Objekt ein Produkt/Angebot ist
-    if (obj.name && (obj.price || obj.offer || obj.promotion || obj.discount)) {
-      if (isRelevant(obj.name)) {
-        deals.push(formatDeal(obj, 'Migros'));
-      }
-    }
-    
-    // Array durchsuchen
-    if (Array.isArray(obj)) {
-      for (const item of obj) search(item, depth + 1);
-    } else {
-      for (const key of Object.keys(obj)) {
-        if (['products', 'offers', 'items', 'promotions', 'teasers', 'content', 'data', 'props', 'pageProps'].includes(key)) {
-          search(obj[key], depth + 1);
-        }
-      }
-    }
-  };
-  
-  search(data);
-  return deals;
-}
-
-// ─── Strategie 2: Denner Angebote ───────────────────────────────
 async function scrapeDenner() {
-  const deals = [];
-  console.log('🔍 [Denner] Scraping Angebote...');
+  console.log('🔍 [Denner] Scraping Aktionen...');
+  const allDeals = [];
 
-  try {
-    const urls = [
-      'https://www.denner.ch/de/angebote/',
-      'https://www.denner.ch/de/aktionen/'
+  const pages = [
+    { url: 'https://www.denner.ch/de/aktionen-und-sortiment/aktionen-aktuelle-woche', name: 'Aktuelle Woche' },
+    { url: 'https://www.denner.ch/de/aktionen-und-sortiment/aktionen-ab-donnerstag', name: 'Ab Donnerstag' },
+    { url: 'https://www.denner.ch/de/', name: 'Homepage' },
+  ];
+
+  for (const page of pages) {
+    try {
+      const deals = await scrapeDennerPage(page.url);
+      const relevant = deals.filter(d => isRelevant(d.product));
+      console.log(`  📄 ${page.name}: ${deals.length} Produkte, ${relevant.length} relevant`);
+      allDeals.push(...relevant);
+    } catch (e) {
+      console.log(`  ⚠ ${page.name}: ${e.message}`);
+    }
+  }
+
+  // Deduplizieren: selber Name → besten Deal (höchster Rabatt) behalten
+  const seen = new Map();
+  for (const deal of allDeals) {
+    const key = deal.product.toLowerCase();
+    if (!seen.has(key) || (deal.discount > (seen.get(key).discount || 0))) {
+      seen.set(key, deal);
+    }
+  }
+
+  const uniqueDeals = [...seen.values()];
+  console.log(`  ✅ [Denner] ${uniqueDeals.length} einzigartige relevante Deals`);
+  return uniqueDeals;
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MIGROS — via playwright-core + System-Chrome
+// Intercepted die interne API-Response die der Browser macht
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/**
+ * Findet den Pfad zum installierten Chrome/Chromium
+ * Funktioniert auf Windows, macOS, und Linux (GitHub Actions)
+ */
+function findChromePath() {
+  // 1. Umgebungsvariable hat Priorität
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
+
+  const platform = process.platform;
+
+  if (platform === 'linux') {
+    // GitHub Actions: google-chrome-stable ist vorinstalliert
+    const linuxPaths = [
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium',
     ];
+    for (const p of linuxPaths) {
+      if (existsSync(p)) return p;
+    }
+    // Fallback: which
+    try {
+      return execSync('which google-chrome-stable || which google-chrome || which chromium-browser || which chromium', { encoding: 'utf-8' }).trim();
+    } catch { /* ignore */ }
+  }
 
-    for (const url of urls) {
-      try {
-        const res = await fetchWithTimeout(url);
-        if (!res.ok) continue;
-        const html = await res.text();
+  if (platform === 'win32') {
+    const winPaths = [
+      join(process.env.PROGRAMFILES || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      join(process.env['PROGRAMFILES(X86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    ];
+    for (const p of winPaths) {
+      if (existsSync(p)) return p;
+    }
+  }
 
-        // Strategie A: __NEXT_DATA__
-        const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-        if (nextDataMatch) {
-          try {
-            const nextData = JSON.parse(nextDataMatch[1]);
-            const offers = extractDennerOffersFromNextData(nextData);
-            deals.push(...offers);
-            if (offers.length > 0) {
-              console.log(`  ✅ [Denner] ${offers.length} Deals via __NEXT_DATA__`);
-              break;
+  if (platform === 'darwin') {
+    const macPath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    if (existsSync(macPath)) return macPath;
+  }
+
+  return null;
+}
+
+async function scrapeMigros() {
+  const deals = [];
+  console.log('🔍 [Migros] Scraping via Playwright + System-Chrome...');
+
+  // 1. Prüfe ob playwright-core verfügbar ist
+  let chromium;
+  try {
+    const pw = await import('playwright-core');
+    chromium = pw.chromium;
+  } catch {
+    console.log('  ⚠ [Migros] playwright-core nicht installiert. Skip.');
+    return deals;
+  }
+
+  // 2. Finde Chrome auf dem System
+  const chromePath = findChromePath();
+  if (!chromePath) {
+    console.log('  ⚠ [Migros] Kein Chrome/Chromium gefunden. Skip.');
+    console.log('  ℹ️  Setze CHROME_PATH oder installiere Chrome.');
+    return deals;
+  }
+  console.log(`  🌐 Chrome gefunden: ${chromePath}`);
+
+  let browser = null;
+  try {
+    // 3. Browser starten (headless)
+    browser = await chromium.launch({
+      executablePath: chromePath,
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+
+    const context = await browser.newContext({
+      userAgent: UA,
+      locale: 'de-CH',
+    });
+    const page = await context.newPage();
+
+    // 4. API-Responses abfangen (Migros nutzt mehrere Endpunkte)
+    const apiResponses = [];
+    page.on('response', async (response) => {
+      const url = response.url();
+      if (url.includes('product-display/public') && response.status() === 200) {
+        try {
+          const json = await response.json();
+          apiResponses.push({ url, data: json });
+        } catch { /* nicht-JSON Response, ignorieren */ }
+      }
+    });
+
+    // 5. Navigiere zur Angebotsseite
+    console.log('  📄 Lade https://www.migros.ch/de/offers/home ...');
+    await page.goto('https://www.migros.ch/de/offers/home', {
+      waitUntil: 'networkidle',
+      timeout: 45000,
+    });
+
+    // 6. Warte kurz für dynamische Inhalte
+    await page.waitForTimeout(3000);
+
+    // 7. Parse API-Daten falls abgefangen
+    console.log(`  📡 ${apiResponses.length} API-Responses abgefangen`);
+
+    for (const { url, data } of apiResponses) {
+      // Versuche verschiedene Strukturen zu parsen
+      const candidates = [];
+
+      // Direkte Arrays
+      if (Array.isArray(data)) candidates.push(...data);
+      // products/items/results Felder
+      if (data.products) candidates.push(...(Array.isArray(data.products) ? data.products : []));
+      if (data.items) candidates.push(...(Array.isArray(data.items) ? data.items : []));
+      if (data.results) candidates.push(...(Array.isArray(data.results) ? data.results : []));
+
+      // Für product-cards: verschachtelte Strukturen
+      if (data.productCards) candidates.push(...data.productCards);
+
+      // Rekursiv suchen nach Arrays von Objekten mit name/price
+      const deepSearch = (obj, depth = 0) => {
+        if (depth > 5 || !obj) return;
+        if (typeof obj !== 'object') return;
+        if (Array.isArray(obj)) {
+          for (const item of obj) {
+            if (item && typeof item === 'object' && (item.name || item.title || item.productName)) {
+              candidates.push(item);
             }
-          } catch (e) {
-            console.log(`  ⚠ [Denner] __NEXT_DATA__ parse error: ${e.message}`);
+            deepSearch(item, depth + 1);
+          }
+        } else {
+          for (const key of Object.keys(obj)) {
+            deepSearch(obj[key], depth + 1);
+          }
+        }
+      };
+      deepSearch(data);
+
+      if (candidates.length > 0) {
+        console.log(`  → API ${url.split('/').slice(-2).join('/')}: ${candidates.length} Kandidaten`);
+      }
+
+      for (const p of candidates) {
+        // Flexibles Name-Parsing
+        const name = p.name || p.title || p.productName || p.description || p.label || '';
+        if (!name || !isRelevant(name)) continue;
+
+        let price = '', oldPrice = null, discount = 0;
+
+        // ─── Migros v4/product-cards Format ───
+        // offer.promotionPrice = Aktionspreis, offer.price = Originalpreis
+        // Bevorzuge effectiveValue (Number) vor advertisedDisplayValue (kann "5.-" sein)
+        if (p.offer) {
+          // Aktionspreis (promotionPrice hat Vorrang)
+          if (p.offer.promotionPrice) {
+            const pp = p.offer.promotionPrice;
+            price = pp.effectiveValue ? String(pp.effectiveValue) : (pp.advertisedDisplayValue || pp.effectiveDisplayValue || '');
+          }
+          // Originalpreis
+          if (p.offer.price && typeof p.offer.price === 'object') {
+            const op = p.offer.price;
+            const origPrice = op.effectiveValue ? String(op.effectiveValue) : (op.advertisedDisplayValue || op.effectiveDisplayValue || '');
+            // Wenn promotionPrice existiert und "statt"-Label da ist → das ist der alte Preis
+            if (p.offer.promotionPrice && p.offer.priceInsteadOfLabel) {
+              oldPrice = origPrice;
+            } else if (!price) {
+              price = origPrice; // Kein Aktionspreis → normaler Preis
+            }
+          }
+          // Fallback: displayPrice direkt
+          if (!price && typeof p.offer.price === 'number') {
+            price = String(p.offer.price);
+          }
+        }
+        // ─── Generische Formate ───
+        if (!price && p.price) {
+          if (typeof p.price === 'object') {
+            price = String(p.price.effectiveValue || p.price.value || p.price.advertisedDisplayValue || '');
+          } else {
+            price = String(p.price);
+          }
+        }
+        if (!price && p.currentPrice) price = String(p.currentPrice);
+        if (!oldPrice && p.oldPrice) oldPrice = String(p.oldPrice);
+        if (!discount && p.discountPercentage) discount = p.discountPercentage;
+
+        // Preise normalisieren: "5.-" → "5.00", sicherstellen dass es Zahlen sind
+        const cleanPrice = (s) => {
+          if (!s) return null;
+          s = String(s).replace('.-', '.00').replace('–', '.00').replace(',', '.');
+          const num = parseFloat(s);
+          return isNaN(num) || num <= 0 ? null : num.toFixed(2);
+        };
+        price = cleanPrice(price);
+        oldPrice = cleanPrice(oldPrice);
+
+        // Discount berechnen
+        if (oldPrice && price && !discount) {
+          const pNum = parseFloat(price);
+          const oNum = parseFloat(oldPrice);
+          if (pNum > 0 && oNum > pNum) {
+            discount = Math.round((1 - pNum / oNum) * 100);
           }
         }
 
-        // Strategie B: JSON-LD
-        const jsonLdMatches = html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g);
-        for (const match of jsonLdMatches) {
-          try {
-            const ld = JSON.parse(match[1]);
-            const offers = extractFromJsonLd(ld, 'Denner');
-            deals.push(...offers);
-          } catch (e) { /* ignore */ }
-        }
+        if (!price) continue;
+        // Nur echte Deals: muss einen Rabatt haben (price < oldPrice)
+        if (oldPrice && price === oldPrice && discount === 0) continue;
 
-        // Strategie C: HTML parsing - Denner Angebotskarten
-        const productMatches = html.matchAll(/class="[^"]*product[^"]*"[\s\S]*?<[^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)<[\s\S]*?(?:CHF|Fr\.?)\s*([\d.,]+)/gi);
-        for (const match of productMatches) {
-          const name = match[1].trim();
-          const price = match[2].replace(',', '.');
-          if (isRelevant(name)) {
-            deals.push({
-              product: name,
-              store: 'Denner',
-              price: price,
-              oldPrice: null,
-              discount: 0,
-              validFrom: getWeekStart(),
-              validUntil: getWeekEnd(),
-              category: detectCategory(name)
+        // Duplikate vermeiden
+        const key = name.toLowerCase();
+        if (deals.some(d => d.product.toLowerCase() === key)) continue;
+
+        deals.push({
+          product: name,
+          store: 'Migros',
+          price,
+          oldPrice,
+          discount: Math.abs(discount),
+          validFrom: p.validFrom || p.promotionStartDate || getWeekStart(),
+          validUntil: p.validUntil || p.promotionEndDate || getWeekEnd(),
+          category: detectCategory(name),
+        });
+      }
+    }
+
+    // 8. Fallback: Daten direkt aus dem DOM extrahieren
+    if (deals.length === 0) {
+      console.log('  🔄 Keine API-Deals — versuche DOM-Extraktion...');
+
+      const domDeals = await page.evaluate(() => {
+        const items = [];
+
+        // Migros Product Cards: finde alle Artikel-Links
+        const links = document.querySelectorAll('a[href*="/product/"]');
+        for (const link of links) {
+          // Gehe zum übergeordneten Card-Element
+          const card = link.closest('[class*="card"], [class*="Card"], article, li') || link;
+
+          // Name aus dem Link-Text oder Bild-Alt
+          const img = card.querySelector('img');
+          const nameFromImg = img?.alt || '';
+          const nameFromText = card.querySelector('span, p, h3, h2')?.textContent?.trim() || '';
+          const name = nameFromImg || nameFromText;
+
+          // Preis: suche nach Elementen mit CHF oder Zahlen im Format X.XX
+          const allText = card.innerText || '';
+          const priceMatches = allText.match(/(\d{1,3}\.\d{2})/g);
+
+          if (name && priceMatches && priceMatches.length > 0) {
+            const prices = priceMatches.map(p => parseFloat(p)).filter(p => p > 0 && p < 500);
+            prices.sort((a, b) => a - b); // Kleinster Preis = aktueller Preis
+
+            items.push({
+              name: name.trim(),
+              price: prices[0]?.toFixed(2) || '',
+              oldPrice: prices.length > 1 ? prices[prices.length - 1].toFixed(2) : '',
             });
           }
         }
 
-        if (deals.length > 0) break;
-      } catch (e) {
-        console.log(`  ⚠ [Denner] Fetch error for ${url}: ${e.message}`);
-      }
-    }
-  } catch (e) {
-    console.log(`  ❌ [Denner] General error: ${e.message}`);
-  }
+        return items;
+      });
 
-  console.log(`  📦 [Denner] Total: ${deals.length} relevante Deals`);
-  return deals;
-}
+      console.log(`  → ${domDeals.length} Produkte via DOM`);
 
-function extractDennerOffersFromNextData(data) {
-  const deals = [];
-  const search = (obj, depth = 0) => {
-    if (depth > 10 || !obj || typeof obj !== 'object') return;
-    
-    if (obj.title && (obj.price || obj.salePrice || obj.promotionPrice)) {
-      const name = obj.title || obj.name;
-      if (name && isRelevant(name)) {
+      for (const item of domDeals) {
+        if (!isRelevant(item.name)) continue;
+
+        const price = item.price || '';
+        const oldPrice = item.oldPrice && item.oldPrice !== item.price ? item.oldPrice : null;
+
+        let discount = 0;
+        if (oldPrice && price) {
+          discount = Math.round((1 - parseFloat(price) / parseFloat(oldPrice)) * 100);
+        }
+
+        if (!price) continue;
+
         deals.push({
-          product: name,
-          store: 'Denner',
-          price: String(obj.salePrice || obj.promotionPrice || obj.price || ''),
-          oldPrice: obj.regularPrice || obj.originalPrice || null,
-          discount: obj.discountPercentage || obj.discount || 0,
-          validFrom: obj.validFrom || obj.startDate || getWeekStart(),
-          validUntil: obj.validUntil || obj.endDate || getWeekEnd(),
-          category: detectCategory(name)
+          product: item.name,
+          store: 'Migros',
+          price,
+          oldPrice,
+          discount: Math.abs(discount),
+          validFrom: getWeekStart(),
+          validUntil: getWeekEnd(),
+          category: detectCategory(item.name),
         });
       }
     }
-    
-    if (Array.isArray(obj)) {
-      for (const item of obj) search(item, depth + 1);
+
+    if (deals.length > 0) {
+      console.log(`  ✅ [Migros] ${deals.length} relevante Deals!`);
     } else {
-      for (const key of Object.keys(obj)) {
-        search(obj[key], depth + 1);
-      }
+      console.log('  ⚠ [Migros] Keine relevanten Deals extrahiert.');
     }
-  };
-  
-  search(data);
-  return deals;
-}
 
-// ─── Hilfsfunktionen ─────────────────────────────────────────────
-function extractFromJsonLd(ld, store) {
-  const deals = [];
-  if (!ld) return deals;
-  
-  const items = Array.isArray(ld) ? ld : [ld];
-  for (const item of items) {
-    if (item['@type'] === 'Product' || item['@type'] === 'Offer') {
-      const name = item.name || '';
-      if (isRelevant(name)) {
-        const offer = item.offers || item;
-        deals.push({
-          product: name,
-          store,
-          price: String(offer.price || offer.lowPrice || ''),
-          oldPrice: offer.highPrice || null,
-          discount: 0,
-          validFrom: offer.validFrom || getWeekStart(),
-          validUntil: offer.validThrough || getWeekEnd(),
-          category: detectCategory(name)
-        });
-      }
+  } catch (e) {
+    console.log(`  ❌ [Migros] Playwright-Fehler: ${e.message}`);
+  } finally {
+    if (browser) {
+      try { await browser.close(); } catch { /* ignore */ }
     }
   }
+
+  console.log(`  📦 [Migros] Total: ${deals.length} Deals`);
   return deals;
 }
 
-function formatDeal(item, store) {
-  const name = item.name || item.title || item.description || 'Produkt';
-  const price = item.price?.current || item.salePrice || item.promotionPrice || item.price?.value || item.price || 0;
-  const oldPrice = item.price?.original || item.price?.was || item.regularPrice || item.originalPrice || null;
-  const discount = item.discount || item.discountPercentage || 
-    (oldPrice && price ? Math.round((1 - Number(price) / Number(oldPrice)) * 100) : 0);
 
-  return {
-    product: name,
-    store,
-    price: typeof price === 'number' ? price.toFixed(2) : String(price),
-    oldPrice: oldPrice ? (typeof oldPrice === 'number' ? oldPrice.toFixed(2) : String(oldPrice)) : null,
-    discount: Math.abs(discount),
-    validFrom: item.validFrom || item.startDate || getWeekStart(),
-    validUntil: item.validUntil || item.validThrough || item.endDate || getWeekEnd(),
-    category: detectCategory(name)
-  };
-}
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MAIN
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function detectCategory(name) {
-  const n = name.toLowerCase();
-  if (/hack|rind|schwein|poulet|hähnchen|chicken|steak|filet|wurst|schinken/.test(n)) return 'Fleisch';
-  if (/lachs|thunfisch|fisch|crevetten|garnelen/.test(n)) return 'Fisch';
-  if (/milch|joghurt|quark|käse|mozzarella|butter|rahm/.test(n)) return 'Milchprodukte';
-  if (/eier|ei\b/.test(n)) return 'Eier';
-  if (/reis|hafer|pasta|brot|knäcke|tortilla/.test(n)) return 'Getreide';
-  if (/avocado|brokk|spinat|kartoffel|tomaten|gemüse/.test(n)) return 'Gemüse';
-  if (/banane|apfel|beeren|blau/.test(n)) return 'Früchte';
-  if (/erdnuss|nuss|mandel|öl|kokos/.test(n)) return 'Fette & Nüsse';
-  return 'Sonstiges';
-}
-
-function getWeekStart() {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(now.setDate(diff)).toISOString().split('T')[0];
-}
-
-function getWeekEnd() {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = now.getDate() - day + (day === 0 ? 0 : 7);
-  return new Date(now.setDate(diff)).toISOString().split('T')[0];
-}
-
-// ─── Main ────────────────────────────────────────────────────────
 async function main() {
-  console.log('🛒 Chiggas Mealplan — Deal Scraper');
+  console.log('🛒 Chiggas Mealplan — Deal Scraper v2');
   console.log(`📅 ${new Date().toISOString()}`);
   console.log('─'.repeat(50));
 
-  const migrosDeals = await scrapeMigros();
   const dennerDeals = await scrapeDenner();
+  console.log('─'.repeat(50));
+  const migrosDeals = await scrapeMigros();
+  console.log('─'.repeat(50));
 
-  const allDeals = [...migrosDeals, ...dennerDeals];
+  const allDeals = [...dennerDeals, ...migrosDeals];
 
-  // Duplikate entfernen
+  // Globale Deduplizierung
   const seen = new Set();
   const uniqueDeals = allDeals.filter(d => {
     const key = `${d.store}-${d.product}`.toLowerCase();
@@ -366,31 +608,29 @@ async function main() {
 
   const output = {
     lastUpdated: new Date().toISOString(),
-    deals: uniqueDeals
+    deals: uniqueDeals,
   };
 
-  // Sicherstellen dass public/ existiert
   mkdirSync(join(__dirname, '..', 'public'), { recursive: true });
   writeFileSync(OUTPUT, JSON.stringify(output, null, 2), 'utf-8');
 
-  console.log('─'.repeat(50));
-  console.log(`✅ Fertig! ${uniqueDeals.length} Deals gespeichert → public/deals.json`);
-  
+  console.log(`✅ Fertig! ${uniqueDeals.length} Deals → public/deals.json`);
+
   if (uniqueDeals.length > 0) {
-    console.log('\nTop Deals:');
-    for (const d of uniqueDeals.slice(0, 5)) {
-      console.log(`  🏷️  ${d.store} | ${d.product} | CHF ${d.price}${d.discount ? ` (-${d.discount}%)` : ''}`);
+    console.log('\n🏷️  Top Deals:');
+    for (const d of uniqueDeals.slice(0, 15)) {
+      const disc = d.discount ? ` (-${d.discount}%)` : '';
+      const old = d.oldPrice ? ` statt CHF ${d.oldPrice}` : '';
+      console.log(`  ${d.store.padEnd(8)} | ${d.product.substring(0, 40).padEnd(40)} | CHF ${d.price}${old}${disc}`);
     }
   } else {
-    console.log('\n⚠ Keine Deals gefunden — Seiten möglicherweise geändert.');
-    console.log('  → Prüfe die Scraping-Strategien oder update die URLs.');
+    console.log('\n⚠ Keine Deals gefunden.');
   }
 }
 
 main().catch(e => {
   console.error('❌ Scraper crashed:', e.message);
-  // Trotzdem eine leere deals.json schreiben damit der Build nicht bricht
   mkdirSync(join(__dirname, '..', 'public'), { recursive: true });
   writeFileSync(OUTPUT, JSON.stringify({ lastUpdated: new Date().toISOString(), deals: [] }, null, 2), 'utf-8');
-  process.exit(0); // Kein Fehler-Exit, damit die Action weiterläuft
+  process.exit(0);
 });

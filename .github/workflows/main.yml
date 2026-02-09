@@ -40,6 +40,9 @@ jobs:
 
       - name: Scrape Deals (Migros & Denner)
         run: node scripts/scrape-deals.mjs
+        env:
+          # GitHub Actions ubuntu-latest hat Chrome vorinstalliert
+          CHROME_PATH: /usr/bin/google-chrome-stable
         continue-on-error: true
 
       - name: Build
