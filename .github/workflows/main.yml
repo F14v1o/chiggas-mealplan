@@ -5,8 +5,10 @@ on:
     branches:
       - main
   schedule:
-    # Täglich um 06:00 UTC (07:00 Schweizer Zeit) Deals scrapen & deployen
-    - cron: '0 6 * * *'
+    # 3x täglich Deals scrapen & deployen (Schweizer Zeit = UTC+1)
+    - cron: '0 6 * * *'   # 07:00 Schweizer Zeit
+    - cron: '0 11 * * *'  # 12:00 Schweizer Zeit
+    - cron: '0 17 * * *'  # 18:00 Schweizer Zeit
   workflow_dispatch: # Manueller Trigger
 
 permissions:
