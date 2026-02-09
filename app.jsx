@@ -20,7 +20,8 @@ import {
   Pill,
   Tag,
   X,
-  Bell
+  Bell,
+  Percent
 } from 'lucide-react';
 
 const App = () => {
@@ -363,17 +364,17 @@ const App = () => {
             </button>
           </div>
         </div>
-        {/* Deals Bell */}
-        {deals.length > 0 && (
-          <button 
-            onClick={() => setShowDeals(true)}
-            className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 p-2 rounded-xl transition-colors z-10"
-            title="Aktuelle Aktionen"
-          >
-            <Bell size={18} className="text-white" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[8px] text-white font-black flex items-center justify-center">{deals.length}</span>
-          </button>
-        )}
+        {/* Deals Button (immer sichtbar) */}
+        <button 
+          onClick={() => setShowDeals(true)}
+          className="absolute top-4 left-4 bg-white/15 hover:bg-white/25 p-2.5 rounded-xl transition-all z-10 group"
+          title="Aktuelle Aktionen anzeigen"
+        >
+          <Percent size={16} className="text-white/70 group-hover:text-white transition-colors" />
+          {deals.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[8px] text-white font-black flex items-center justify-center animate-pulse">{deals.length}</span>
+          )}
+        </button>
         <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
       </header>
 
@@ -661,9 +662,9 @@ const App = () => {
       </footer>
 
       {/* Deals Popup */}
-      {showDeals && deals.length > 0 && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-up">
+      {showDeals && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setShowDeals(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
             <div className="bg-gradient-to-r from-red-500 to-orange-500 p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-2 rounded-xl">
@@ -679,7 +680,7 @@ const App = () => {
               </button>
             </div>
             <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
-              {deals.map((deal, idx) => (
+              {deals.length > 0 ? deals.map((deal, idx) => (
                 <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-center gap-3">
                   <div className="bg-red-50 text-red-500 font-black text-xs rounded-lg p-2 shrink-0 text-center min-w-[52px]">
                     <span className="text-lg leading-none block">-{deal.discount}%</span>
@@ -693,7 +694,13 @@ const App = () => {
                     {deal.oldPrice && <p className="text-slate-300 text-[10px] line-through">CHF {deal.oldPrice}</p>}
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-8">
+                  <Percent size={32} className="text-slate-200 mx-auto mb-3" />
+                  <p className="font-bold text-slate-400 text-sm">Keine aktuellen Aktionen</p>
+                  <p className="text-slate-300 text-xs mt-1">Deals werden täglich automatisch aktualisiert.</p>
+                </div>
+              )}
             </div>
             <div className="p-3 border-t border-slate-100 text-center">
               <button onClick={() => setShowDeals(false)} className="text-slate-400 text-xs font-bold hover:text-slate-600 transition-colors">
