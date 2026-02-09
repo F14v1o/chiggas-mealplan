@@ -127,29 +127,40 @@ const App = () => {
     }
   };
 
-  // Einkaufslisten (Thunfisch integriert)
+  // Einkaufslisten (Mittag + Abendessen komplett)
   const shoppingWeekly = [
-    { item: 'Rinderstreifen / Hack', qty: 0.8, unit: 'kg', price: '14.50', store: 'Denner' },
-    { item: 'Schweinsnierstücke', qty: 0.8, unit: 'kg', price: '12.00', store: 'Denner/Migros' },
-    { item: 'Pouletbrust (Gross-Pack)', qty: 1.5, unit: 'kg', price: '18.50', store: 'Migros' },
-    { item: 'Lachs / Weissfisch / Thunfisch', qty: 1.5, unit: 'kg', price: '24.00', store: 'Denner/Migros' },
-    { item: 'Eier (Freiland, 30er)', qty: 2, unit: 'Pack', price: '14.50', store: 'Migros' },
-    { item: 'Süßkartoffeln', qty: 5, unit: 'kg', price: '12.00', store: 'Migros' },
-    { item: 'Grünkohl / Spinat', qty: 2.5, unit: 'kg', price: '10.50', store: 'Migros' },
-    { item: 'Brokkoli / Pak Choi', qty: 2.5, unit: 'kg', price: '12.00', store: 'Denner' },
-    { item: 'Kiwis / Beeren (Mix)', qty: 1, unit: 'kg', price: '8.00', store: 'Migros' }
+    // Proteine (Mittag)
+    { item: 'Rinderstreifen / Hack', qty: 0.8, unit: 'kg', price: '15.90', store: 'Denner' },
+    { item: 'Schweinsnierstücke', qty: 0.8, unit: 'kg', price: '11.90', store: 'Denner' },
+    { item: 'Pouletbrust (Gross-Pack)', qty: 1.5, unit: 'kg', price: '17.90', store: 'Migros' },
+    { item: 'Lachs / Weissfisch', qty: 1.2, unit: 'kg', price: '22.50', store: 'Migros' },
+    // Proteine (Abend)
+    { item: 'Eier (Freiland, 30er)', qty: 2, unit: 'Pack', price: '17.00', store: 'Migros' },
+    { item: 'Räucherlachs (100g)', qty: 2, unit: 'Pack', price: '7.90', store: 'Denner' },
+    { item: 'Hüttenkäse (250g)', qty: 3, unit: 'Becher', price: '5.85', store: 'Migros' },
+    { item: 'Feta (200g)', qty: 1, unit: 'Pack', price: '2.95', store: 'Denner' },
+    // Gemüse & Carbs
+    { item: 'Süsskartoffeln', qty: 5, unit: 'kg', price: '14.90', store: 'Migros' },
+    { item: 'Grünkohl / Spinat', qty: 3, unit: 'kg', price: '11.90', store: 'Migros' },
+    { item: 'Brokkoli / Pak Choi', qty: 2.5, unit: 'kg', price: '11.50', store: 'Denner' },
+    { item: 'Champignons', qty: 0.5, unit: 'kg', price: '3.90', store: 'Migros' },
+    { item: 'Salat-Gemüse (Gurke, Tomaten, Salat)', qty: 2, unit: 'kg', price: '7.50', store: 'Denner' },
+    { item: 'Vollkornbrot', qty: 1, unit: 'Pack', price: '2.90', store: 'Migros' },
+    // Snacks & Früchte
+    { item: 'Kiwis / Beeren (Mix)', qty: 1, unit: 'kg', price: '8.50', store: 'Migros' }
   ];
 
   const shoppingMonthly = [
     { item: 'Reis (M-Budget, 5kg)', qty: 2, unit: 'Sack', price: '11.80', store: 'Migros' },
-    { item: 'Linsen (Trocken, 1kg)', qty: 2, unit: 'Pack', price: '5.00', store: 'Migros' },
-    { item: 'Edamame (TK, 500g)', qty: 3, unit: 'Pack', price: '9.00', store: 'Migros' },
-    { item: 'Erbsen (TK, 1kg)', qty: 2, unit: 'Pack', price: '5.00', store: 'Denner' },
-    { item: 'Thunfisch Konserven (Vorrat)', qty: 10, unit: 'Dosen', price: '15.00', store: 'Denner' },
-    { item: 'Whey Protein (2.5kg)', qty: 1, unit: 'Kübel', price: '75.00', store: 'Online' },
-    { item: 'Kreatin (500g)', qty: 1, unit: 'Dose', price: '25.00', store: 'Online' },
-    { item: 'Nüsse / Kerne Mix', qty: 2, unit: 'kg', price: '18.00', store: 'Denner' },
-    { item: 'Olivenöl (1L)', qty: 2, unit: 'Fl.', price: '16.00', store: 'Migros' }
+    { item: 'Linsen (Trocken, 1kg)', qty: 2, unit: 'Pack', price: '4.80', store: 'Migros' },
+    { item: 'Edamame (TK, 500g)', qty: 3, unit: 'Pack', price: '8.85', store: 'Migros' },
+    { item: 'Erbsen (TK, 1kg)', qty: 2, unit: 'Pack', price: '4.60', store: 'Denner' },
+    { item: 'Thunfisch Konserven (Mittag + Abend)', qty: 12, unit: 'Dosen', price: '19.80', store: 'Denner' },
+    { item: 'Whey Protein (2.5kg)', qty: 1, unit: 'Kübel', price: '74.90', store: 'Online' },
+    { item: 'Kreatin (500g)', qty: 1, unit: 'Dose', price: '24.90', store: 'Online' },
+    { item: 'Nüsse / Kerne Mix', qty: 2, unit: 'kg', price: '17.80', store: 'Denner' },
+    { item: 'Olivenöl Extra Virgin (1L)', qty: 2, unit: 'Fl.', price: '15.80', store: 'Migros' },
+    { item: 'Erdnussmus (350g)', qty: 2, unit: 'Glas', price: '7.80', store: 'Denner' }
   ];
 
   // Helper für Zutaten (Simuliert gleiche Basis für alle Pläne)
@@ -233,6 +244,67 @@ const App = () => {
       veggie: ' Dazu: Reis & Hüttenkäse.'
     };
     return day.dinner.replace(/\.$/, '') + (extras[day.type] || '') ;
+  };
+
+  // Abendessen-Zutaten (dynamisch aus Beschreibung)
+  const getDinnerIngredients = (day) => {
+    const text = (bulkingMode ? getBulkDinner(day) : day.dinner).toLowerCase();
+    const m = bulkingMode ? 1.4 : 1;
+    const ingredients = [];
+
+    // Eier-basierte Gerichte
+    if (text.includes('eier') || text.includes('omelett') || text.includes('rührei') || text.includes('spiegel')) {
+      const count = text.includes('4 eier') ? 4 : 3;
+      ingredients.push({ item: 'Eier', qty: Math.round(count * m), unit: 'Stk' });
+    }
+
+    // Protein-Quellen
+    if (text.includes('räucherlachs')) ingredients.push({ item: 'Räucherlachs', qty: Math.round(80 * m), unit: 'g' });
+    if (text.includes('thunfisch')) ingredients.push({ item: 'Thunfisch (Dose)', qty: Math.round(150 * m), unit: 'g' });
+    if (text.includes('hüttenkäse')) ingredients.push({ item: 'Hüttenkäse', qty: Math.round(200 * m), unit: 'g' });
+    if (text.includes('feta')) ingredients.push({ item: 'Feta', qty: Math.round(60 * m), unit: 'g' });
+
+    // Gemüse
+    if (text.includes('spinat')) ingredients.push({ item: 'Spinat', qty: Math.round(150 * m), unit: 'g' });
+    if (text.includes('grünkohl')) ingredients.push({ item: 'Grünkohl', qty: Math.round(100 * m), unit: 'g' });
+    if (text.includes('edamame')) ingredients.push({ item: 'Edamame (TK)', qty: Math.round(80 * m), unit: 'g' });
+    if (text.includes('erbsen')) ingredients.push({ item: 'Erbsen (TK)', qty: Math.round(100 * m), unit: 'g' });
+    if (text.includes('pilz')) ingredients.push({ item: 'Champignons', qty: Math.round(100 * m), unit: 'g' });
+    if (text.includes('tomaten')) ingredients.push({ item: 'Tomaten', qty: Math.round(100 * m), unit: 'g' });
+    if (text.includes('gurke')) ingredients.push({ item: 'Gurke', qty: Math.round(100 * m), unit: 'g' });
+    if (text.includes('linsen')) ingredients.push({ item: 'Linsen (gekocht)', qty: Math.round(80 * m), unit: 'g' });
+    if (text.includes('rohkost')) ingredients.push({ item: 'Rohkost-Mix', qty: Math.round(200 * m), unit: 'g' });
+    if (text.includes('salat') && !text.includes('eiersalat')) ingredients.push({ item: 'Blattsalat', qty: Math.round(100 * m), unit: 'g' });
+    if (text.includes('gemüse') && !ingredients.some(i => i.item.includes('Rohkost'))) ingredients.push({ item: 'Gemüse-Mix', qty: Math.round(200 * m), unit: 'g' });
+    if (text.includes('brokkoli') && !ingredients.some(i => i.item.includes('Brokkoli'))) ingredients.push({ item: 'Brokkoli', qty: Math.round(100 * m), unit: 'g' });
+
+    // Carbs
+    if (text.includes('vollkornbrot')) ingredients.push({ item: 'Vollkornbrot', qty: Math.round(2 * m), unit: 'Scheiben' });
+    if (text.includes('reis') && !text.includes('eiersalat')) ingredients.push({ item: 'Reis (gekocht)', qty: Math.round(150 * m), unit: 'g' });
+    if (text.includes('süsskartoffel')) ingredients.push({ item: 'Süsskartoffel', qty: Math.round(150 * m), unit: 'g' });
+    if (text.includes('pancake')) {
+      ingredients.push({ item: 'Haferflocken', qty: Math.round(40 * m), unit: 'g' });
+      ingredients.push({ item: 'Whey Protein', qty: Math.round(30 * m), unit: 'g' });
+    }
+
+    // Fette & Extras
+    if (text.includes('nüss') || text.includes('nüssen')) ingredients.push({ item: 'Nüsse', qty: Math.round(30 * m), unit: 'g' });
+    if (text.includes('avocado')) ingredients.push({ item: 'Avocado', qty: 0.5, unit: 'Stk' });
+    if (text.includes('erdnussmus')) ingredients.push({ item: 'Erdnussmus', qty: Math.round(20 * m), unit: 'g' });
+    if (text.includes('käse') && !text.includes('hüttenkäse') && !text.includes('frischkäse')) ingredients.push({ item: 'Käse', qty: Math.round(30 * m), unit: 'g' });
+
+    // Olivenöl für gebratene Gerichte
+    if (text.includes('rührei') || text.includes('spiegel') || text.includes('omelett') || text.includes('pfanne')) {
+      ingredients.push({ item: 'Olivenöl', qty: Math.round(10 * m), unit: 'ml' });
+    }
+
+    // Fallback
+    if (ingredients.length === 0) {
+      ingredients.push({ item: 'Eier', qty: Math.round(3 * m), unit: 'Stk' });
+      ingredients.push({ item: 'Gemüse-Reste', qty: Math.round(150 * m), unit: 'g' });
+    }
+
+    return ingredients;
   };
 
   // Supplement-Empfehlungen basierend auf Vitaminwerten
@@ -456,17 +528,27 @@ const App = () => {
                 </div>
               </div>
 
-              <div className={`rounded-[2rem] p-6 shadow-xl flex flex-col ${currentDay.isCheat ? 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white' : 'bg-slate-900 text-white'}`}>
+              <div className={`rounded-[2rem] p-6 shadow-xl flex flex-col ${currentDay.isCheat ? 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white' : 'bg-[#0f1b3d] text-white'}`}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="bg-white/10 p-2 rounded-lg border border-white/20">
                     {currentDay.isCheat ? <IceCream size={18} /> : <Egg size={18} />}
                   </div>
                   <span className="font-bold text-white/50 uppercase text-[10px]">Abendessen</span>
                 </div>
-                <h3 className="text-xl font-black mb-3">{currentDay.isCheat ? 'Cheat Night' : (bulkingMode ? 'Heavy Recovery Meal' : 'Recovery Meal')}</h3>
-                <p className="text-white/80 italic text-base mb-8 leading-relaxed">"{bulkingMode ? getBulkDinner(currentDay) : currentDay.dinner}"</p>
-                <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-[10px] text-white/50 font-bold uppercase">Consistency is Key</span>
+                <h3 className="text-xl font-black mb-1">{currentDay.isCheat ? 'Cheat Night' : (bulkingMode ? 'Heavy Recovery Meal' : 'Recovery Meal')}</h3>
+                <p className="text-white/70 text-sm mb-4 leading-relaxed">{bulkingMode ? getBulkDinner(currentDay) : currentDay.dinner}</p>
+
+                <div className="space-y-2 mb-4">
+                  {getDinnerIngredients(currentDay).map((ing, idx) => (
+                    <div key={idx} className="flex justify-between items-center bg-white/[0.07] p-2.5 rounded-xl text-xs">
+                      <span className="font-bold text-white/80">{ing.item}</span>
+                      <span className="text-emerald-400 font-mono font-bold">{typeof ing.qty === 'number' && ing.qty % 1 !== 0 ? (ing.qty * servings).toFixed(1) : (ing.qty * servings).toLocaleString()} {ing.unit}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-auto pt-3 border-t border-white/10 flex items-center justify-between">
+                  <span className="text-[10px] text-white/40 font-bold uppercase">Consistency is Key</span>
                   <CheckCircle2 className="text-emerald-400" size={20} />
                 </div>
               </div>
@@ -575,7 +657,7 @@ const App = () => {
       </main>
 
       <footer className="text-center mt-8 text-slate-400 text-[10px] font-bold uppercase tracking-widest pb-10">
-        <p>Built for Jil // v3.0 Multi-Plan</p>
+        <p>Built for Jill // v3.0 Multi-Plan</p>
       </footer>
 
       {/* Deals Popup */}
