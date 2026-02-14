@@ -480,6 +480,12 @@ async function scrapeMigros() {
         const key = name.toLowerCase();
         if (deals.some(d => d.product.toLowerCase() === key)) continue;
 
+        // Migros Produkt-URL konstruieren
+        const migrosSlug = p.slug || p.migrosId || p.productId || p.id || '';
+        const migrosUrl = migrosSlug 
+          ? `https://www.migros.ch/de/product/${migrosSlug}`
+          : (p.url ? `https://www.migros.ch${p.url.startsWith('/') ? '' : '/'}${p.url}` : null);
+
         deals.push({
           product: name,
           store: 'Migros',
@@ -489,6 +495,7 @@ async function scrapeMigros() {
           validFrom: p.validFrom || p.promotionStartDate || getWeekStart(),
           validUntil: p.validUntil || p.promotionEndDate || getWeekEnd(),
           category: detectCategory(name),
+          url: migrosUrl || `https://www.migros.ch/de/search?q=${encodeURIComponent(name)}`,
         });
       }
     }
@@ -505,6 +512,9 @@ async function scrapeMigros() {
         for (const link of links) {
           // Gehe zum übergeordneten Card-Element
           const card = link.closest('[class*="card"], [class*="Card"], article, li') || link;
+
+          // Produkt-URL aus dem Link extrahieren
+          const productUrl = link.href || '';
 
           // Name aus dem Link-Text oder Bild-Alt
           const img = card.querySelector('img');
@@ -524,6 +534,7 @@ async function scrapeMigros() {
               name: name.trim(),
               price: prices[0]?.toFixed(2) || '',
               oldPrice: prices.length > 1 ? prices[prices.length - 1].toFixed(2) : '',
+              url: productUrl,
             });
           }
         }
@@ -555,6 +566,7 @@ async function scrapeMigros() {
           validFrom: getWeekStart(),
           validUntil: getWeekEnd(),
           category: detectCategory(item.name),
+          url: item.url || `https://www.migros.ch/de/search?q=${encodeURIComponent(item.name)}`,
         });
       }
     }

@@ -64,7 +64,8 @@
       "discount": 45,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Pangasiusfilets"
     },
     {
       "product": "Arctic Fish atlantisches Lachsrückenfilet",
@@ -85,7 +86,8 @@
       "discount": 40,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Poulet%20Crispy"
     },
     {
       "product": "Kabeljaurücken",
@@ -95,7 +97,8 @@
       "discount": 36,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fisch"
+      "category": "Fisch",
+      "url": "https://www.migros.ch/de/search?q=Kabeljaur%C3%BCcken"
     },
     {
       "product": "Cantadou Frischkäse",
@@ -116,7 +119,8 @@
       "discount": 34,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Rippli"
     },
     {
       "product": "Pouletgeschnetzeltes",
@@ -126,7 +130,8 @@
       "discount": 33,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Pouletgeschnetzeltes"
     },
     {
       "product": "Meatballs",
@@ -136,7 +141,8 @@
       "discount": 33,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Meatballs"
     },
     {
       "product": "Thai Jasmin Parfümreis",
@@ -157,7 +163,8 @@
       "discount": 31,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Lammfilet"
     },
     {
       "product": "White Tiger Crevetten",
@@ -167,7 +174,8 @@
       "discount": 31,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fisch"
+      "category": "Fisch",
+      "url": "https://www.migros.ch/de/search?q=White%20Tiger%20Crevetten"
     },
     {
       "product": "Grischuna Rohschinken",
@@ -188,7 +196,8 @@
       "discount": 28,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Gemüse"
+      "category": "Gemüse",
+      "url": "https://www.migros.ch/de/search?q=Avocado"
     },
     {
       "product": "Tomaten",
@@ -198,7 +207,8 @@
       "discount": 27,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Gemüse"
+      "category": "Gemüse",
+      "url": "https://www.migros.ch/de/search?q=Tomaten"
     },
     {
       "product": "Traiteur Seiler Crevetten Torpedo",
@@ -230,7 +240,8 @@
       "discount": 25,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Rindsburger"
     },
     {
       "product": "Denner Schweinsnierstück",
@@ -251,7 +262,8 @@
       "discount": 24,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Wienerli"
     },
     {
       "product": "Hartkäse AOP",
@@ -261,7 +273,8 @@
       "discount": 23,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Milchprodukte"
+      "category": "Milchprodukte",
+      "url": "https://www.migros.ch/de/search?q=Hartk%C3%A4se%20AOP"
     },
     {
       "product": "IP-SUISSE Kartoffeln",
@@ -293,7 +306,8 @@
       "discount": 21,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Gemüse"
+      "category": "Gemüse",
+      "url": "https://www.migros.ch/de/search?q=Raclette%20Kartoffeln"
     },
     {
       "product": "Rindsentrecote",
@@ -303,7 +317,8 @@
       "discount": 21,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Rindsentrecote"
     },
     {
       "product": "Denner Pouletschnitzel",
@@ -335,7 +350,8 @@
       "discount": 20,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Bauernschinken"
     },
     {
       "product": "Poulet Schnitzel Delice",
@@ -345,7 +361,8 @@
       "discount": 20,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Fleisch"
+      "category": "Fleisch",
+      "url": "https://www.migros.ch/de/search?q=Poulet%20Schnitzel%20Delice"
     },
     {
       "product": "Halbhartkäse",
@@ -355,7 +372,8 @@
       "discount": 20,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Milchprodukte"
+      "category": "Milchprodukte",
+      "url": "https://www.migros.ch/de/search?q=Halbhartk%C3%A4se"
     },
     {
       "product": "Reibkäse",
@@ -365,7 +383,8 @@
       "discount": 20,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Milchprodukte"
+      "category": "Milchprodukte",
+      "url": "https://www.migros.ch/de/search?q=Reibk%C3%A4se"
     },
     {
       "product": "Cherry-Rispentomaten",
@@ -397,7 +416,8 @@
       "discount": 15,
       "validFrom": "2026-02-08",
       "validUntil": "2026-02-14",
-      "category": "Gemüse"
+      "category": "Gemüse",
+      "url": "https://www.migros.ch/de/search?q=Broccoli"
     },
     {
       "product": "Denner Vollmilch",

@@ -21,16 +21,40 @@ import {
   Tag,
   X,
   Bell,
-  Percent
+  Percent,
+  ExternalLink
 } from 'lucide-react';
 
+// LocalStorage Helper: Einstellungen pro Browser/User persistent speichern
+const STORAGE_KEY = 'chiggas-mealplan-settings';
+
+const loadSettings = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) { /* Falls localStorage nicht verfügbar */ }
+  return null;
+};
+
+const saveSettings = (settings) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  } catch (e) { /* Ignorieren falls voll/blockiert */ }
+};
+
 const App = () => {
-  const [servings, setServings] = useState(3);
-  const [activeTab, setActiveTab] = useState('mon'); 
-  const [activePlan, setActivePlan] = useState(1); // Plan 1, 2 oder 3
-  const [bulkingMode, setBulkingMode] = useState(false);
+  const saved = loadSettings();
+  const [servings, setServings] = useState(saved?.servings ?? 3);
+  const [activeTab, setActiveTab] = useState(saved?.activeTab ?? 'mon'); 
+  const [activePlan, setActivePlan] = useState(saved?.activePlan ?? 1);
+  const [bulkingMode, setBulkingMode] = useState(saved?.bulkingMode ?? false);
   const [deals, setDeals] = useState([]);
   const [showDeals, setShowDeals] = useState(false);
+
+  // Einstellungen bei Änderung speichern
+  useEffect(() => {
+    saveSettings({ servings, activeTab, activePlan, bulkingMode });
+  }, [servings, activeTab, activePlan, bulkingMode]);
 
   // Deals von Migros/Denner laden
   useEffect(() => {
@@ -680,21 +704,32 @@ const App = () => {
               </button>
             </div>
             <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
-              {deals.length > 0 ? deals.map((deal, idx) => (
-                <div key={idx} className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-center gap-3">
-                  <div className="bg-red-50 text-red-500 font-black text-xs rounded-lg p-2 shrink-0 text-center min-w-[52px]">
-                    <span className="text-lg leading-none block">-{deal.discount}%</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-800 text-sm truncate">{deal.product}</p>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase">{deal.store} · bis {new Date(deal.validUntil).toLocaleDateString('de-CH')}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-red-500 font-black text-sm">CHF {deal.price}</p>
-                    {deal.oldPrice && <p className="text-slate-300 text-[10px] line-through">CHF {deal.oldPrice}</p>}
-                  </div>
-                </div>
-              )) : (
+              {deals.length > 0 ? deals.map((deal, idx) => {
+                // Fallback: Migros-Suche oder Denner-Suche falls keine direkte URL vorhanden
+                const dealUrl = deal.url || (
+                  deal.store === 'Migros' 
+                    ? `https://www.migros.ch/de/search?q=${encodeURIComponent(deal.product)}`
+                    : `https://www.denner.ch/de/search?q=${encodeURIComponent(deal.product)}`
+                );
+                return (
+                  <a key={idx} href={dealUrl} target="_blank" rel="noopener noreferrer" className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-center gap-3 cursor-pointer hover:bg-slate-100 hover:border-slate-200 transition-all active:scale-[0.98] block" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <div className="bg-red-50 text-red-500 font-black text-xs rounded-lg p-2 shrink-0 text-center min-w-[52px]">
+                      <span className="text-lg leading-none block">-{deal.discount}%</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-800 text-sm truncate">{deal.product}</p>
+                      <p className="text-slate-400 text-[10px] font-bold uppercase">{deal.store} · bis {new Date(deal.validUntil).toLocaleDateString('de-CH')}</p>
+                    </div>
+                    <div className="text-right shrink-0 flex items-center gap-2">
+                      <div>
+                        <p className="text-red-500 font-black text-sm">CHF {deal.price}</p>
+                        {deal.oldPrice && <p className="text-slate-300 text-[10px] line-through">CHF {deal.oldPrice}</p>}
+                      </div>
+                      <ExternalLink size={14} className="text-slate-300" />
+                    </div>
+                  </a>
+                );
+              }) : (
                 <div className="text-center py-8">
                   <Percent size={32} className="text-slate-200 mx-auto mb-3" />
                   <p className="font-bold text-slate-400 text-sm">Keine aktuellen Aktionen</p>
