@@ -170,6 +170,7 @@ const App = () => {
     { item: 'Brokkoli / Pak Choi', qty: 2.5, unit: 'kg', price: '11.50', store: 'Denner' },
     { item: 'Champignons', qty: 0.5, unit: 'kg', price: '3.90', store: 'Migros' },
     { item: 'Salat-Gemüse (Gurke, Tomaten, Salat)', qty: 2, unit: 'kg', price: '7.50', store: 'Denner' },
+    { item: 'Avocados', qty: 4, unit: 'Stk', price: '5.40', store: 'Migros' },
     { item: 'Vollkornbrot', qty: 1, unit: 'Pack', price: '2.90', store: 'Migros' },
     // Snacks & Früchte
     { item: 'Kiwis / Beeren (Mix)', qty: 1, unit: 'kg', price: '8.50', store: 'Migros' }
@@ -332,6 +333,57 @@ const App = () => {
     return ingredients;
   };
 
+  // Deal-Matching: Findet passende Aktionen für Einkaufslisteneinträge
+  const ITEM_KEYWORDS = {
+    'Rinderstreifen / Hack': ['rind', 'hack', 'entrecote', 'rindsbraten', 'burger', 'rindsburger', 'angus', 'voressen'],
+    'Schweinsnierstücke': ['schwein', 'nierstück', 'kotlett', 'schnitzel', 'bratwurst', 'schweinefleisch'],
+    'Pouletbrust (Gross-Pack)': ['poulet', 'hähnchen', 'chicken', 'pouletbrust', 'pouletschnitzel', 'geschnetzelt', 'truten', 'crispy'],
+    'Lachs / Weissfisch': ['lachs', 'fisch', 'pangasius', 'kabeljau', 'lachsrücken', 'weissfisch'],
+    'Eier (Freiland, 30er)': ['eier'],
+    'Räucherlachs (100g)': ['räucherlachs', 'lachs'],
+    'Hüttenkäse (250g)': ['hüttenkäse', 'cottage', 'frischkäse'],
+    'Feta (200g)': ['feta', 'käse'],
+    'Süsskartoffeln': ['süsskartoffel', 'kartoffel'],
+    'Grünkohl / Spinat': ['grünkohl', 'spinat'],
+    'Brokkoli / Pak Choi': ['broccoli', 'brokkoli', 'pak choi'],
+    'Champignons': ['champignon', 'pilz'],
+    'Salat-Gemüse (Gurke, Tomaten, Salat)': ['tomaten', 'gurke', 'salat', 'cherry'],
+    'Avocados': ['avocado'],
+    'Vollkornbrot': ['brot', 'vollkorn'],
+    'Kiwis / Beeren (Mix)': ['kiwi', 'beeren', 'blaubeer'],
+    'Reis (M-Budget, 5kg)': ['reis', 'jasmin'],
+    'Linsen (Trocken, 1kg)': ['linsen'],
+    'Edamame (TK, 500g)': ['edamame'],
+    'Erbsen (TK, 1kg)': ['erbsen'],
+    'Thunfisch Konserven (Mittag + Abend)': ['thunfisch', 'thun'],
+    'Whey Protein (2.5kg)': ['whey', 'protein'],
+    'Nüsse / Kerne Mix': ['nüsse', 'nuss', 'mandel', 'cashew', 'walnuss'],
+    'Olivenöl Extra Virgin (1L)': ['olivenöl', 'öl'],
+    'Erdnussmus (350g)': ['erdnuss', 'erdnussmus'],
+    'Milch': ['milch', 'vollmilch', 'halbrahm', 'rahm'],
+  };
+
+  const getMatchingDeals = (itemName) => {
+    if (deals.length === 0) return [];
+    const keywords = ITEM_KEYWORDS[itemName] || [];
+    if (keywords.length === 0) {
+      // Fallback: Versuche direktes Keyword-Matching aus dem Item-Namen
+      const itemLower = itemName.toLowerCase();
+      return deals.filter(d => {
+        const dealLower = d.product.toLowerCase();
+        return itemLower.split(/[\s\/,()]+/).some(w => w.length > 3 && dealLower.includes(w));
+      }).filter(d => d.discount >= 15).slice(0, 2);
+    }
+    return deals
+      .filter(d => {
+        const dealLower = d.product.toLowerCase();
+        return keywords.some(kw => dealLower.includes(kw));
+      })
+      .filter(d => d.discount >= 10) // Nur Deals ab 10% anzeigen
+      .sort((a, b) => b.discount - a.discount)
+      .slice(0, 2); // Max 2 Deals pro Item
+  };
+
   // Supplement-Empfehlungen basierend auf Vitaminwerten
   const getSupplementRecs = (vitamins) => {
     const vMap = {};
@@ -467,20 +519,53 @@ const App = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-3">
-              {(activeTab === 'weekly_list' ? shoppingWeekly : shoppingMonthly).map((item, idx) => (
-                <div key={idx} className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-between items-center">
-                  <div>
-                    <p className="font-bold text-slate-800 text-sm">{item.item}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">{item.store}</p>
+              {(activeTab === 'weekly_list' ? shoppingWeekly : shoppingMonthly).map((item, idx) => {
+                const matchingDeals = getMatchingDeals(item.item);
+                return (
+                  <div key={idx} className="rounded-xl overflow-hidden border border-slate-100">
+                    <div className="bg-slate-50 p-4 flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-slate-800 text-sm">{item.item}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">{item.store}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-emerald-600 font-mono font-black text-sm">
+                          {(item.qty * (servings/3)).toFixed(1)} {item.unit}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-bold">ca. CHF {(parseFloat(item.price) * (servings/3)).toFixed(2)}</p>
+                      </div>
+                    </div>
+                    {matchingDeals.length > 0 && (
+                      <div className="bg-red-50/60 border-t border-red-100 px-4 py-2.5 space-y-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <Tag size={10} className="text-red-400" />
+                          <span className="text-[9px] font-black uppercase text-red-400 tracking-wider">Spar-Tipp diese Woche</span>
+                        </div>
+                        {matchingDeals.map((deal, dIdx) => {
+                          const dealUrl = deal.url || (
+                            deal.store === 'Migros'
+                              ? `https://www.migros.ch/de/search?q=${encodeURIComponent(deal.product)}`
+                              : `https://www.denner.ch/de/search?q=${encodeURIComponent(deal.product)}`
+                          );
+                          return (
+                            <a key={dIdx} href={dealUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between gap-2 group" style={{ textDecoration: 'none', color: 'inherit' }}>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded shrink-0">-{deal.discount}%</span>
+                                <span className="text-slate-700 text-xs font-bold truncate group-hover:text-red-600 transition-colors">{deal.product}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-red-600 font-mono font-black text-xs">CHF {deal.price}</span>
+                                <span className="text-[9px] text-slate-400 font-bold uppercase">{deal.store}</span>
+                                <ExternalLink size={10} className="text-slate-300 group-hover:text-red-400 transition-colors" />
+                              </div>
+                            </a>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-emerald-600 font-mono font-black text-sm">
-                      {(item.qty * (servings/3)).toFixed(1)} {item.unit}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-bold">ca. CHF {(parseFloat(item.price) * (servings/3)).toFixed(2)}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             
             <div className="mt-6 p-5 bg-slate-900 rounded-[1.5rem] text-white flex justify-between items-center shadow-lg">
