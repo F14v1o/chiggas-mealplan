@@ -1,0 +1,61 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # 3x täglich Deals scrapen & deployen (Schweizer Zeit = UTC+1)
+    - cron: '0 6 * * *'   # 07:00 Schweizer Zeit
+    - cron: '0 11 * * *'  # 12:00 Schweizer Zeit
+    - cron: '0 17 * * *'  # 18:00 Schweizer Zeit
+  workflow_dispatch: # Manueller Trigger
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Scrape Deals (Migros & Denner)
+        run: node scripts/scrape-deals.mjs
+        env:
+          # GitHub Actions ubuntu-latest hat Chrome vorinstalliert
+          CHROME_PATH: /usr/bin/google-chrome-stable
+        continue-on-error: true
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
