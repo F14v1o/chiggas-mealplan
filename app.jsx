@@ -240,8 +240,8 @@ const App = () => {
     { item: 'Zimt (gemahlen)', qty: 1, unit: 'Dose', price: '2.90', store: 'Migros', isBreakfast: true },
   ];
 
-  // Bulking-Faktor für Einkaufslisten (gleicher Faktor wie bei Zutaten)
-  const bulkFactor = bulkingMode ? 1.4 : 1;
+  // Bulking-Faktor: 1.7x grössere Portionen → ~3000 kcal ohne Frühstück, ~3550 mit Frühstück
+  const bulkFactor = bulkingMode ? 1.7 : 1;
 
   // Jamain-Modus: Schwein aus Einkaufsliste entfernen, Poulet-Menge erhöhen
   // Frühstück-Modus: Frühstücks-Items zur Liste hinzufügen
@@ -277,7 +277,7 @@ const App = () => {
 
   // Helper für Zutaten (Simuliert gleiche Basis für alle Pläne)
   const getIngredients = (day) => {
-    const m = bulkingMode ? 1.4 : 1;
+    const m = bulkFactor;
     const base = [
       { item: 'Protein (Rind/Huhn/Fisch)', qty: Math.round(200 * m), unit: 'g' },
       { item: 'Carbs (Reis/Süsskartoffel)', qty: Math.round(250 * m), unit: 'g' },
@@ -361,7 +361,7 @@ const App = () => {
   // Abendessen-Zutaten (dynamisch aus Beschreibung)
   const getDinnerIngredients = (day) => {
     const text = (bulkingMode ? getBulkDinner(day) : day.dinner).toLowerCase();
-    const m = bulkingMode ? 1.4 : 1;
+    const m = bulkFactor;
     const ingredients = [];
 
     // Eier-basierte Gerichte
@@ -500,7 +500,7 @@ const App = () => {
 
   // Makronährstoffe berechnen (Protein, Carbs, Fett in Gramm pro Person)
   const getMacros = (day) => {
-    const m = bulkingMode ? 1.4 : 1;
+    const m = bulkFactor;
     let protein = 0, carbs = 0, fat = 0;
 
     // Mittagessen — Protein-Quelle (200g Rohgewicht Basis)
@@ -534,23 +534,23 @@ const App = () => {
     if (dinnerText.includes('räucherlachs')) { protein += 15 * m; fat += 8 * m; }
     if (dinnerText.includes('thunfisch')) { protein += 20 * m; fat += 3 * m; }
     if (dinnerText.includes('feta')) { protein += 7 * m; fat += 10 * m; }
-    if (dinnerText.includes('avocado')) { fat += 15; protein += 2; carbs += 5; }
-    if (dinnerText.includes('erdnussmus')) { fat += 8; protein += 4; carbs += 3; }
-    if (dinnerText.includes('nüsse') || dinnerText.includes('nüssen')) { fat += 12; protein += 4; carbs += 3; }
+    if (dinnerText.includes('avocado')) { fat += 15 * m; protein += 2 * m; carbs += 5 * m; }
+    if (dinnerText.includes('erdnussmus')) { fat += 8 * m; protein += 4 * m; carbs += 3 * m; }
+    if (dinnerText.includes('nüsse') || dinnerText.includes('nüssen')) { fat += 12 * m; protein += 4 * m; carbs += 3 * m; }
     if (dinnerText.includes('olivenöl')) { fat += 10 * m; }
     if (dinnerText.includes('linsen')) { protein += 9 * m; carbs += 20 * m; }
     if (dinnerText.includes('pancake')) { protein += 10 * m; carbs += 15 * m; fat += 3 * m; }
 
-    // Snack (Obst + Nüsse)
+    // Snack (Obst + Nüsse) — mit Bulking-Faktor skaliert
     const snackText = day.snack.toLowerCase();
-    if (snackText.includes('kiwi')) { carbs += 22; }
-    else if (snackText.includes('blaubeeren')) { carbs += 18; }
-    else if (snackText.includes('orangen')) { carbs += 20; }
-    else { carbs += 20; }
-    protein += 5; fat += 14; carbs += 4;
+    if (snackText.includes('kiwi')) { carbs += 22 * m; }
+    else if (snackText.includes('blaubeeren')) { carbs += 18 * m; }
+    else if (snackText.includes('orangen')) { carbs += 20 * m; }
+    else { carbs += 20 * m; }
+    protein += 5 * m; fat += 14 * m; carbs += 4 * m;
 
-    // Post-Workout Shake (30g Whey)
-    protein += 25; carbs += 2; fat += 1;
+    // Post-Workout Shake (Whey Protein) — mit Bulking-Faktor skaliert
+    protein += 25 * m; carbs += 2 * m; fat += 1 * m;
 
     // Frühstück (~550 kcal)
     if (breakfastMode) {
@@ -877,10 +877,10 @@ const App = () => {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                 <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl text-center">
                   <p className="text-white/50 text-[9px] font-bold uppercase mb-1">Whey Protein</p>
-                  <p className="font-black text-lg text-emerald-300">{30 * servings}g</p>
+                  <p className="font-black text-lg text-emerald-300">{Math.round(30 * bulkFactor) * servings}g</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl text-center">
                   <p className="text-white/50 text-[9px] font-bold uppercase mb-1">Kreatin</p>
@@ -888,7 +888,7 @@ const App = () => {
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl text-center">
                   <p className="text-white/50 text-[9px] font-bold uppercase mb-1">Wasser</p>
-                  <p className="font-black text-lg text-emerald-300">{300 * servings}ml</p>
+                  <p className="font-black text-lg text-emerald-300">{Math.round(300 * bulkFactor) * servings}ml</p>
                 </div>
               </div>
             </div>
