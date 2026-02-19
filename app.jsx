@@ -240,8 +240,8 @@ const App = () => {
     { item: 'Zimt (gemahlen)', qty: 1, unit: 'Dose', price: '2.90', store: 'Migros', isBreakfast: true },
   ];
 
-  // Bulking-Faktor: 1.7x grössere Portionen → ~3000 kcal ohne Frühstück, ~3550 mit Frühstück
-  const bulkFactor = bulkingMode ? 1.7 : 1;
+  // Bulking-Faktor: 1.5x grössere Portionen → ~2900–3200 kcal ohne Frühstück, ~3450–3750 mit Frühstück
+  const bulkFactor = bulkingMode ? 1.5 : 1;
 
   // Jamain-Modus: Schwein aus Einkaufsliste entfernen, Poulet-Menge erhöhen
   // Frühstück-Modus: Frühstücks-Items zur Liste hinzufügen
@@ -284,9 +284,9 @@ const App = () => {
 
     let carbItem;
     if (hasReis && hasKartoffel) {
-      carbItem = { item: 'Reis (trocken) + Süsskartoffel (roh)', qty: Math.round(170 * m), unit: 'g' };
+      carbItem = { item: 'Reis (trocken) + Süsskartoffel (roh)', qty: Math.round(150 * m), unit: 'g' };
     } else if (hasReis) {
-      carbItem = { item: 'Reis (trocken)', qty: Math.round(120 * m), unit: 'g' };
+      carbItem = { item: 'Reis (trocken)', qty: Math.round(100 * m), unit: 'g' };
     } else if (hasKartoffel) {
       carbItem = { item: 'Süsskartoffel (roh)', qty: Math.round(300 * m), unit: 'g' };
     } else {
@@ -529,10 +529,10 @@ const App = () => {
     const lunchLower = day.lunchDesc.toLowerCase();
     const hasLunchReis = lunchLower.includes('reis') && !lunchLower.includes('ohne reis');
     const hasLunchKartoffel = lunchLower.includes('kartoffel');
-    if (hasLunchReis && hasLunchKartoffel) { carbs += 72 * m; protein += 6 * m; }
-    else if (hasLunchReis) { carbs += 93 * m; protein += 9 * m; fat += 1 * m; }
+    if (hasLunchReis && hasLunchKartoffel) { carbs += 65 * m; protein += 5 * m; }
+    else if (hasLunchReis) { carbs += 78 * m; protein += 7 * m; fat += 1 * m; }
     else if (hasLunchKartoffel) { carbs += 63 * m; protein += 2 * m; }
-    else { carbs += 72 * m; protein += 5 * m; }
+    else { carbs += 65 * m; protein += 4 * m; }
     // Mittagessen — Gemüse (300g)
     carbs += 12 * m; protein += 5 * m;
     // Mittagessen — Hülsenfrüchte (60g trocken)
