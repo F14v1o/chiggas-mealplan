@@ -278,9 +278,24 @@ const App = () => {
   // Helper für Zutaten (Simuliert gleiche Basis für alle Pläne)
   const getIngredients = (day) => {
     const m = bulkFactor;
+    const lunchLower = day.lunchDesc.toLowerCase();
+    const hasReis = lunchLower.includes('reis') && !lunchLower.includes('ohne reis');
+    const hasKartoffel = lunchLower.includes('kartoffel');
+
+    let carbItem;
+    if (hasReis && hasKartoffel) {
+      carbItem = { item: 'Reis (trocken) + Süsskartoffel (roh)', qty: Math.round(170 * m), unit: 'g' };
+    } else if (hasReis) {
+      carbItem = { item: 'Reis (trocken)', qty: Math.round(120 * m), unit: 'g' };
+    } else if (hasKartoffel) {
+      carbItem = { item: 'Süsskartoffel (roh)', qty: Math.round(300 * m), unit: 'g' };
+    } else {
+      carbItem = { item: 'Carbs (Reis trocken / Süsskartoffel roh)', qty: Math.round(200 * m), unit: 'g' };
+    }
+
     const base = [
       { item: 'Protein (Rind/Huhn/Fisch)', qty: Math.round(200 * m), unit: 'g' },
-      { item: 'Carbs (Reis/Süsskartoffel)', qty: Math.round(250 * m), unit: 'g' },
+      carbItem,
       { item: 'Gemüse (Brokkoli/Spinat)', qty: Math.round(300 * m), unit: 'g' },
       { item: 'Linsen (Trocken)', qty: Math.round(60 * m), unit: 'g' }
     ];
@@ -392,7 +407,7 @@ const App = () => {
 
     // Carbs
     if (text.includes('vollkornbrot')) ingredients.push({ item: 'Vollkornbrot', qty: Math.round(200 * m), unit: 'g', note: 'KEIN TOAST' });
-    if (text.includes('reis') && !text.includes('eiersalat')) ingredients.push({ item: 'Reis (gekocht)', qty: Math.round(150 * m), unit: 'g' });
+    if (text.includes('reis') && !text.includes('eiersalat')) ingredients.push({ item: 'Reis (trocken)', qty: Math.round(60 * m), unit: 'g' });
     if (text.includes('süsskartoffel')) ingredients.push({ item: 'Süsskartoffel', qty: Math.round(150 * m), unit: 'g' });
     if (text.includes('pancake')) {
       ingredients.push({ item: 'Haferflocken', qty: Math.round(40 * m), unit: 'g' });
@@ -510,8 +525,14 @@ const App = () => {
     else if (day.type === 'pork') { protein += 42 * m; fat += 20 * m; }
     else if (day.type === 'veggie') { protein += 18 * m; fat += 3 * m; carbs += 25 * m; }
 
-    // Mittagessen — Carbs (250g Reis/Süsskartoffel)
-    carbs += 58 * m;
+    // Mittagessen — Carbs (Reis trocken / Süsskartoffel roh)
+    const lunchLower = day.lunchDesc.toLowerCase();
+    const hasLunchReis = lunchLower.includes('reis') && !lunchLower.includes('ohne reis');
+    const hasLunchKartoffel = lunchLower.includes('kartoffel');
+    if (hasLunchReis && hasLunchKartoffel) { carbs += 72 * m; protein += 6 * m; }
+    else if (hasLunchReis) { carbs += 93 * m; protein += 9 * m; fat += 1 * m; }
+    else if (hasLunchKartoffel) { carbs += 63 * m; protein += 2 * m; }
+    else { carbs += 72 * m; protein += 5 * m; }
     // Mittagessen — Gemüse (300g)
     carbs += 12 * m; protein += 5 * m;
     // Mittagessen — Hülsenfrüchte (60g trocken)
@@ -526,7 +547,7 @@ const App = () => {
 
     if (dinnerText.includes('spinat') || dinnerText.includes('grünkohl')) { protein += 3 * m; carbs += 4 * m; }
     if (dinnerText.includes('vollkornbrot')) { carbs += 48 * m; protein += 8 * m; fat += 2 * m; }
-    if (dinnerText.includes('reis') && !dinnerText.includes('eiersalat')) { carbs += 35 * m; }
+    if (dinnerText.includes('reis') && !dinnerText.includes('eiersalat')) { carbs += 47 * m; protein += 4 * m; }
     if (dinnerText.includes('süsskartoffel')) { carbs += 28 * m; }
     if (dinnerText.includes('edamame')) { protein += 8 * m; carbs += 5 * m; fat += 4 * m; }
     if (dinnerText.includes('erbsen')) { protein += 5 * m; carbs += 10 * m; }
