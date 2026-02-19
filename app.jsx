@@ -195,12 +195,12 @@ const App = () => {
     { item: 'Hüttenkäse (250g)', qty: 3, unit: 'Becher', price: '5.85', store: 'Migros' },
     { item: 'Feta (200g)', qty: 1, unit: 'Pack', price: '2.95', store: 'Denner' },
     // Gemüse & Carbs
-    { item: 'Süsskartoffeln', qty: 5, unit: 'kg', price: '14.90', store: 'Migros' },
+    { item: 'Süsskartoffeln', qty: 3.5, unit: 'kg', price: '10.50', store: 'Migros' },
     { item: 'Grünkohl / Spinat', qty: 3, unit: 'kg', price: '11.90', store: 'Migros' },
     { item: 'Brokkoli / Pak Choi', qty: 2.5, unit: 'kg', price: '11.50', store: 'Denner' },
     { item: 'Champignons', qty: 0.5, unit: 'kg', price: '3.90', store: 'Migros' },
     { item: 'Salat-Gemüse (Gurke, Tomaten, Salat)', qty: 2, unit: 'kg', price: '7.50', store: 'Denner' },
-    { item: 'Avocados', qty: 4, unit: 'Stk', price: '5.40', store: 'Migros' },
+    { item: 'Avocados', qty: 8, unit: 'Stk', price: '10.80', store: 'Migros' },
     { item: 'Vollkornbrot', qty: 1, unit: 'Pack', price: '2.90', store: 'Migros' },
     // Snacks & Früchte
     { item: 'Kiwis (frisch)', qty: 1.5, unit: 'kg', price: '6.50', store: 'Migros' },
@@ -218,7 +218,7 @@ const App = () => {
     { item: 'Kreatin (500g)', qty: 1, unit: 'Dose', price: '24.90', store: 'Online' },
     { item: 'Nüsse / Kerne Mix', qty: 2, unit: 'kg', price: '17.80', store: 'Denner' },
     { item: 'Olivenöl Extra Virgin (1L)', qty: 2, unit: 'Fl.', price: '15.80', store: 'Migros' },
-    { item: 'Erdnussmus (350g)', qty: 2, unit: 'Glas', price: '7.80', store: 'Denner' }
+    { item: 'Erdnussmus (350g)', qty: 3, unit: 'Glas', price: '11.70', store: 'Denner' }
   ];
 
   // Frühstück-Einkaufslisten (nur wenn Frühstück-Toggle aktiv)
@@ -240,7 +240,7 @@ const App = () => {
     { item: 'Zimt (gemahlen)', qty: 1, unit: 'Dose', price: '2.90', store: 'Migros', isBreakfast: true },
   ];
 
-  // Bulking-Faktor: 1.5x grössere Portionen → ~2900–3200 kcal ohne Frühstück, ~3450–3750 mit Frühstück
+  // Bulking-Faktor: 1.5x Portionen → 2910–3185 kcal ohne Frühstück, ~3460–3735 mit Frühstück
   const bulkFactor = bulkingMode ? 1.5 : 1;
 
   // Jamain-Modus: Schwein aus Einkaufsliste entfernen, Poulet-Menge erhöhen
@@ -284,7 +284,7 @@ const App = () => {
 
     let carbItem;
     if (hasReis && hasKartoffel) {
-      carbItem = { item: 'Reis (trocken) + Süsskartoffel (roh)', qty: Math.round(150 * m), unit: 'g' };
+      carbItem = { item: 'Reis (trocken) + Süsskartoffel (roh)', qty: Math.round(200 * m), unit: 'g' };
     } else if (hasReis) {
       carbItem = { item: 'Reis (trocken)', qty: Math.round(100 * m), unit: 'g' };
     } else if (hasKartoffel) {
@@ -366,9 +366,9 @@ const App = () => {
     const extras = {
       meat: ' Dazu: Extra Reis & Avocado.',
       pork: ' Dazu: Reis, Brokkoli & Erdnussmus.',
-      fish: ' Dazu: Süsskartoffel & Olivenöl.',
+      fish: ' Dazu: Reis & Avocado.',
       poultry: ' Dazu: Vollkornbrot & Erdnussmus.',
-      veggie: ' Dazu: Reis & Hüttenkäse.'
+      veggie: ' Dazu: Reis, Avocado, Hüttenkäse & Erdnussmus.'
     };
     return day.dinner.replace(/\.$/, '') + (extras[day.type] || '') ;
   };
@@ -407,7 +407,7 @@ const App = () => {
 
     // Carbs
     if (text.includes('vollkornbrot')) ingredients.push({ item: 'Vollkornbrot', qty: Math.round(200 * m), unit: 'g', note: 'KEIN TOAST' });
-    if (text.includes('reis') && !text.includes('eiersalat')) ingredients.push({ item: 'Reis (trocken)', qty: Math.round(60 * m), unit: 'g' });
+    if (text.replace(/eiersalat/g, '').includes('reis')) ingredients.push({ item: 'Reis (trocken)', qty: Math.round(60 * m), unit: 'g' });
     if (text.includes('süsskartoffel')) ingredients.push({ item: 'Süsskartoffel', qty: Math.round(150 * m), unit: 'g' });
     if (text.includes('pancake')) {
       ingredients.push({ item: 'Haferflocken', qty: Math.round(40 * m), unit: 'g' });
@@ -521,7 +521,7 @@ const App = () => {
     // Mittagessen — Protein-Quelle (200g Rohgewicht Basis)
     if (day.type === 'meat') { protein += 52 * m; fat += 16 * m; }
     else if (day.type === 'fish') { protein += 44 * m; fat += 16 * m; }
-    else if (day.type === 'poultry') { protein += 46 * m; fat += 6 * m; }
+    else if (day.type === 'poultry') { protein += 46 * m; fat += 14 * m; }
     else if (day.type === 'pork') { protein += 42 * m; fat += 20 * m; }
     else if (day.type === 'veggie') { protein += 18 * m; fat += 3 * m; carbs += 25 * m; }
 
@@ -529,10 +529,10 @@ const App = () => {
     const lunchLower = day.lunchDesc.toLowerCase();
     const hasLunchReis = lunchLower.includes('reis') && !lunchLower.includes('ohne reis');
     const hasLunchKartoffel = lunchLower.includes('kartoffel');
-    if (hasLunchReis && hasLunchKartoffel) { carbs += 65 * m; protein += 5 * m; }
+    if (hasLunchReis && hasLunchKartoffel) { carbs += 85 * m; protein += 5 * m; }
     else if (hasLunchReis) { carbs += 78 * m; protein += 7 * m; fat += 1 * m; }
     else if (hasLunchKartoffel) { carbs += 63 * m; protein += 2 * m; }
-    else { carbs += 65 * m; protein += 4 * m; }
+    else { carbs += 85 * m; protein += 4 * m; }
     // Mittagessen — Gemüse (300g)
     carbs += 12 * m; protein += 5 * m;
     // Mittagessen — Hülsenfrüchte (60g trocken)
@@ -547,7 +547,7 @@ const App = () => {
 
     if (dinnerText.includes('spinat') || dinnerText.includes('grünkohl')) { protein += 3 * m; carbs += 4 * m; }
     if (dinnerText.includes('vollkornbrot')) { carbs += 48 * m; protein += 8 * m; fat += 2 * m; }
-    if (dinnerText.includes('reis') && !dinnerText.includes('eiersalat')) { carbs += 47 * m; protein += 4 * m; }
+    if (dinnerText.replace(/eiersalat/g, '').includes('reis')) { carbs += 47 * m; protein += 4 * m; }
     if (dinnerText.includes('süsskartoffel')) { carbs += 28 * m; }
     if (dinnerText.includes('edamame')) { protein += 8 * m; carbs += 5 * m; fat += 4 * m; }
     if (dinnerText.includes('erbsen')) { protein += 5 * m; carbs += 10 * m; }
