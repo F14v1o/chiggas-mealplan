@@ -1,52 +1,42 @@
 🥗 CHIGGAS AND WHITEBOYS MEALPLAN
-
-Ein hochperformanter, interaktiver Ernährungsplan, der speziell für Sportler und Teams entwickelt wurde. Diese App hilft dabei, die Ernährung präzise zu planen, Mengen automatisch zu skalieren und den Einkauf effizient zu gestalten.
+A high-performance, interactive nutrition plan specifically developed for athletes and teams. This app helps to precisely plan nutrition, automatically scale quantities, and organize grocery shopping efficiently.
 
 🚀 Features
+3 Dynamic Plans: Choose between different recipe variations (Original, Stir-fry dishes, Oven dishes), while the base ingredients for the monthly shop remain stable.
 
-3 Dynamische Pläne: Wähle zwischen verschiedenen Rezept-Variationen (Original, Pfannengerichte, Ofen-Gerichte), während die Grundzutaten für den Monatseinkauf stabil bleiben.
+Person Scaling: All quantities and prices adjust automatically (from 1 to 10 people).
 
-Personen-Skalierung: Alle Mengenangaben und Preise passen sich automatisch an (von 1 bis 10 Personen).
+Intelligent Shopping Lists:
 
-Intelligente Einkaufslisten: - Wochen-Einkauf: Fokus auf frische Proteine und Gemüse.
+Weekly Shopping: Focus on fresh proteins and vegetables.
 
-Monats-Einkauf: Bulk-Zutaten, Vorräte und Supplements.
+Monthly Shopping: Bulk ingredients, pantry staples, and supplements.
 
-Preis-Optimierung: Kalkulationen basieren auf Schweizer Preisen (Migros M-Budget / Denner).
+Price Optimization: Calculations are based on Swiss prices (Migros M-Budget / Denner).
 
-Mobile First Design: Optimiert für die Nutzung auf dem Smartphone direkt im Supermarkt oder in der Küche.
+Mobile First Design: Optimized for smartphone use directly in the supermarket or in the kitchen.
 
 🛠 Tech-Stack
-
 React (Vite)
 
 Tailwind CSS (Styling)
 
 Lucide React (Icons)
 
-Framer Motion (Animationen)
+Framer Motion (Animations)
 
 📦 Installation & Start
+Clone repository:
+git clone https://github.com/your-username/meal-plan.git
 
-Repository klonen:
-
-git clone [https://github.com/dein-username/meal-plan.git](https://github.com/dein-username/meal-plan.git)
-
-
-Abhängigkeiten installieren:
-
+Install dependencies:
 npm install
 
-
-Entwicklungsserver starten:
-
+Start development server:
 npm run dev
 
-
-📋 Planung & Struktur
-
-Die App ist so aufgebaut, dass ein Monats-Basis-Einkauf getätigt werden kann (Linsen, Reis, Thunfisch-Dosen, Supplements), während die wöchentlichen Variationen für Abwechslung sorgen, ohne das Budget zu sprengen.
+📋 Planning & Structure
+The app is structured so that a monthly base shop can be completed (lentils, rice, canned tuna, supplements), while weekly variations provide variety without breaking the budget.
 
 👤 Credits
-
-Hinweis: Die Kalorienangaben sind Richtwerte für eine aktive Performance-Ernährung (~2350 kcal p.P.).
+Note: Calorie specifications are target values for active performance nutrition (~2350 kcal per person).
